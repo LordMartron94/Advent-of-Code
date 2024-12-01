@@ -1,9 +1,0 @@
-go 1.23
-
-toolchain go1.23.0
-
-use (
-	./input_downloader
-)
-
-replace github.com/LordMartron94/Advent-of-Code/_internal/utilities v0.0.0-unpublished => ./input_downloader

@@ -1,0 +1,9 @@
+go 1.23
+
+use (
+	_internal/input_downloader
+	_internal/utilities
+	2024/Day-01
+)
+
+replace github.com/LordMartron94/Advent-of-Code/_internal/utilities v0.0.0-unpublished => "./_internal/utilities"

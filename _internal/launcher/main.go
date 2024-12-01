@@ -90,7 +90,7 @@ func getDayDirs(yearDir string) ([]string, error) {
 
 	for _, dirEntry := range dirEntries {
 		if dirEntry.IsDir() {
-			parts := strings.Split(dirEntry.Name(), " ")
+			parts := strings.Split(dirEntry.Name(), "-")
 			numDay := parts[1]
 			// 0-pad numDay
 			if len(numDay) < 2 {

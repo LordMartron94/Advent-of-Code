@@ -92,7 +92,12 @@ func getDayAndYear() (int, int) {
 }
 
 func writeInputFile(content []byte, year, day int) {
-	inputFilePath := fmt.Sprintf("./%d/Day %d/input.txt", year, day)
+	parsedDay := strconv.Itoa(day)
+	if len(parsedDay) < 2 {
+		parsedDay = "0" + strconv.Itoa(day)
+	}
+
+	inputFilePath := fmt.Sprintf("./%d/Day-%s/input.txt", year, parsedDay)
 	resolvedInputFilePath, err := filepath.Abs(inputFilePath)
 
 	inputFile, err := os.OpenFile(resolvedInputFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)

@@ -4,13 +4,14 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
 )
 
 const year = "2024"
-const day = "Day 1"
+const day = "Day-01"
 
 func readInputFile() []string {
 	// Set current working directory
@@ -156,32 +157,71 @@ func getAppearancesMap(num1Slice, num2Slice []int) map[int]int {
 }
 
 func main() {
-	const numOneResult = 2226302
+	// Set current working directory
+	err := os.Chdir(fmt.Sprintf("./%s/%s", year, day))
 
-	lines := readInputFile()
-	num1Slice, num2Slice := parseInput(lines)
+	// Print current working directory
+	dir, err := os.Getwd()
 
-	// Sort both lists in ascending order
-	sort.Ints(num1Slice)
-	sort.Ints(num2Slice)
-
-	distances := transformPairsToDistances(num1Slice, num2Slice)
-
-	totalDistance := sum(distances)
-
-	fmt.Printf("Total distance for the numbers: %d\n", totalDistance)
-
-	appearancesMap := getAppearancesMap(num1Slice, num2Slice)
-	increases := getIncreases(appearancesMap, num1Slice)
-	sumIncreases := sum(increases)
-
-	fmt.Printf("Sum of increases: %d\n", sumIncreases)
-
-	if sumIncreases == numOneResult {
-		fmt.Println("Solution for test 1 is correct.")
-	} else {
-		fmt.Println("Solution for test 1 is incorrect.")
+	if err != nil {
+		fmt.Println("Error getting current working directory:", err)
+		os.Exit(1)
 	}
+
+	fmt.Println("Current working directory:", dir)
+
+	if err != nil {
+		fmt.Println("Error changing directory:", err)
+		os.Exit(1)
+	}
+
+	file, err := os.OpenFile("test.txt", os.O_RDONLY, 0644)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		os.Exit(1)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Error closing file:", err)
+			os.Exit(1)
+		}
+	}(file)
+
+	fileHandler := utilities.NewFileHandler(file)
+
+	tokens := fileHandler.Lex()
+
+	for _, token := range tokens {
+		fmt.Println(fmt.Sprintf("Token (%d) - %s", token.Type, token.Value))
+	}
+
+	//const numOneResult = 2226302
+	//
+	//lines := readInputFile()
+	//num1Slice, num2Slice := parseInput(lines)
+	//
+	//// Sort both lists in ascending order
+	//sort.Ints(num1Slice)
+	//sort.Ints(num2Slice)
+	//
+	//distances := transformPairsToDistances(num1Slice, num2Slice)
+	//
+	//totalDistance := sum(distances)
+	//
+	//fmt.Printf("Total distance for the tokens: %d\n", totalDistance)
+	//
+	//appearancesMap := getAppearancesMap(num1Slice, num2Slice)
+	//increases := getIncreases(appearancesMap, num1Slice)
+	//sumIncreases := sum(increases)
+	//
+	//fmt.Printf("Sum of increases: %d\n", sumIncreases)
+	//
+	//if sumIncreases == numOneResult {
+	//	fmt.Println("Solution for test 1 is correct.")
+	//} else {
+	//	fmt.Println("Solution for test 1 is incorrect.")
+	//}
 }
 
 func getIncreases(appearancesMap map[int]int, slice []int) []int {
