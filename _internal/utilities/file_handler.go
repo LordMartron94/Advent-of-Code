@@ -15,18 +15,6 @@ func NewFileHandler(reader io.Reader) *FileHandler {
 	return &FileHandler{lexer: lexing.NewLexer(reader)}
 }
 
-func (fh *FileHandler) Lex() []lexing.Token {
-	tokens := make([]lexing.Token, 0)
-
-	for {
-		token := fh.lexer.GetNextToken()
-
-		if token.Type == lexing.EOFToken {
-			break
-		}
-
-		tokens = append(tokens, *token)
-	}
-
-	return tokens
+func (fh *FileHandler) Lex() []*lexing.Token {
+	return fh.lexer.GetTokens()
 }

@@ -97,6 +97,23 @@ func (l *Lexer) GetNextToken() *Token {
 	return args.CurrentToken
 }
 
+// GetTokens retrieves all tokens from the lexer's input.
+func (l *Lexer) GetTokens() []*Token {
+	tokens := make([]*Token, 0)
+
+	for {
+		token := l.GetNextToken()
+
+		if token.Type == EOFToken {
+			break
+		}
+
+		tokens = append(tokens, token)
+	}
+
+	return tokens
+}
+
 func StartState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
 	for {
 		cRune, err := args.lexer.Consume()
