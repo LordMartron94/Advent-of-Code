@@ -1,3 +1,13 @@
+# IDE
 .idea/
+
+# Personal
 .vale-styles/
 .vale.ini
+
+# Environment
+.env
+
+# Build
+/_internal/input_downloader/build/
+Download_Input.exe
