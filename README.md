@@ -4,7 +4,10 @@ This is my repository to post my Advent of Code solutions.
 
 To run my solutions:
 - Make sure the language's requirements are installed.
-- Run the individual task's entry point.
+- Execute the following command in the terminal:
+```powershell
+go run main.go
+```
 
 If you want to use my way of downloading the input:
 - Copy the download_input.ps1 file to your own repository.
