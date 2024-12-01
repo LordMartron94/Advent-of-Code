@@ -3,13 +3,24 @@ package lexing
 import (
 	"bufio"
 	"bytes"
+	"context"
+	"fmt"
 	"io"
+
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/fsm"
 )
 
 // Lexer is a struct for lexing input.
 type Lexer struct {
 	runes []rune
 	index int
+}
+
+type LexerStateArgs struct {
+	lexer *Lexer
+
+	CurrentToken  *Token
+	currentBuffer *bytes.Buffer
 }
 
 // NewLexer creates a new Lexer with the given reader.
@@ -70,51 +81,65 @@ func (l *Lexer) Current() rune {
 	return l.runes[l.index]
 }
 
-// GetNextToken returns the next token from the input.
-func (l *Lexer) GetNextToken() Token {
-	return l.StartState()
+// GetNextToken retrieves the token from the lexer's input.
+func (l *Lexer) GetNextToken() *Token {
+	args, err := fsm.Run(context.Background(), LexerStateArgs{
+		lexer:         l,
+		CurrentToken:  nil,
+		currentBuffer: &bytes.Buffer{},
+	},
+		StartState)
+
+	if err != nil {
+		panic(err)
+	}
+
+	return args.CurrentToken
 }
 
-func (l *Lexer) StartState() Token {
+func StartState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
 	for {
-		cRune, err := l.Consume()
+		cRune, err := args.lexer.Consume()
 
 		if err == io.EOF {
-			return Token{Type: EOFToken, Value: nil}
+			args.CurrentToken = &Token{Type: EOFToken, Value: nil}
+			return args, nil, nil
 		}
 
 		if runeIsWhiteSpace(cRune) {
-			return l.WhitespaceState()
+			return args, WhitespaceState, nil
 		}
 		if runeIsDigit(cRune) {
-			return l.NumberState()
+			return args, NumberState, nil
 		}
+
+		return args, nil, fmt.Errorf("unexpected character: %c", cRune)
 	}
 }
 
-func (l *Lexer) WhitespaceState() Token {
-	return Token{Type: WhitespaceToken, Value: nil}
+func WhitespaceState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+	args.CurrentToken = &Token{Type: WhitespaceToken, Value: nil}
+	return args, nil, nil
 }
 
-func (l *Lexer) NumberState() Token {
-	buf := bytes.Buffer{}
-
-	buf.WriteRune(l.Current())
+func NumberState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+	args.currentBuffer.WriteRune(args.lexer.Current())
 
 	for {
-		cRune, err := l.Consume()
+		cRune, err := args.lexer.Consume()
 
 		if err == io.EOF {
-			return Token{Type: NumberToken, Value: buf.Bytes()}
+			args.CurrentToken = &Token{Type: NumberToken, Value: args.currentBuffer.Bytes()}
+			return args, nil, nil
 		}
 
 		if runeIsDigit(cRune) {
-			buf.WriteRune(cRune)
+			args.currentBuffer.WriteRune(cRune)
 			continue
-		}
-		if runeIsWhiteSpace(cRune) {
-			l.Pushback()
-			return Token{Type: NumberToken, Value: buf.Bytes()}
+		} else {
+			args.lexer.Pushback()
+			args.CurrentToken = &Token{Type: NumberToken, Value: args.currentBuffer.Bytes()}
+			return args, nil, nil
 		}
 	}
 }

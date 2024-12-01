@@ -25,7 +25,7 @@ func (fh *FileHandler) Lex() []lexing.Token {
 			break
 		}
 
-		tokens = append(tokens, token)
+		tokens = append(tokens, *token)
 	}
 
 	return tokens
