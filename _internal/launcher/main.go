@@ -158,9 +158,9 @@ func getEntryPointForDay(dayDir string) (string, error) {
 func processTasks(tasks []string) {
 	for i, task := range tasks {
 		fmt.Printf("Task %d: %s\n", i+1, task)
-		fmt.Println("---------------------------------")
-		fmt.Println()
 	}
+
+	fmt.Println("------------------------------")
 
 	fmt.Println("Total tasks:", len(tasks))
 

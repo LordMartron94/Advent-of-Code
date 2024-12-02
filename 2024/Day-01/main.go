@@ -6,17 +6,17 @@ import (
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/common"
 	pipes2 "github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/pipes"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
 	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
 
-const year = "2024"
-const day = "Day-01"
+const year = 2024
+const day = 1
 
 func main() {
 	const expectedSumDistance = 2164381
 	const expectedSumIncrease = 20719933
-
-	err := os.Chdir(fmt.Sprintf("./%s/%s", year, day))
+	utilities.ChangeWorkingDirectoryToSpecificTask(year, day)
 
 	dir, err := os.Getwd()
 

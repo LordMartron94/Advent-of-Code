@@ -91,14 +91,19 @@ func getDayAndYear() (int, int) {
 	return finalYear, finalDay
 }
 
-func writeInputFile(content []byte, year, day int) {
+func writeFile(content []byte, year, day int, fileName string) {
 	parsedDay := strconv.Itoa(day)
 	if len(parsedDay) < 2 {
 		parsedDay = "0" + strconv.Itoa(day)
 	}
 
-	inputFilePath := fmt.Sprintf("./%d/Day-%s/input.txt", year, parsedDay)
+	inputFilePath := fmt.Sprintf("./%d/Day-%s/%s", year, parsedDay, fileName)
 	resolvedInputFilePath, err := filepath.Abs(inputFilePath)
+
+	err = os.MkdirAll(filepath.Dir(resolvedInputFilePath), 0755)
+	if err != nil {
+		panic(err)
+	}
 
 	inputFile, err := os.OpenFile(resolvedInputFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 
@@ -121,6 +126,66 @@ func writeInputFile(content []byte, year, day int) {
 	}
 
 	fmt.Println("Input file created successfully: ", inputFilePath)
+}
+
+func putBasicFiles(year, day int) {
+	// Write go.mod file
+	dayS := strconv.Itoa(day)
+	if len(dayS) < 2 {
+		dayS = "0" + dayS
+	}
+
+	goModContent := fmt.Sprintf(`module github.com/LordMartron94/Advent-of-Code/{%d}/Day-{%s}
+
+go 1.23
+`, year, dayS)
+
+	writeFile([]byte(goModContent), year, day, "go.mod")
+
+	goMainContent := fmt.Sprintf(`package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
+)
+
+const year = %d
+const day = %d
+
+func main() {
+	utilities.ChangeWorkingDirectoryToSpecificTask(year, day)
+	dir, err := os.Getwd()
+
+	if err != nil {
+		fmt.Println("Error getting current working directory:", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("Current working directory:", dir)
+
+	if err != nil {
+		fmt.Println("Error changing directory:", err)
+		os.Exit(1)
+	}
+
+	file, err := os.OpenFile("input.txt", os.O_RDONLY, 0644)
+	if err != nil {
+		fmt.Println("Error opening file:", err)
+		os.Exit(1)
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("Error closing file:", err)
+			os.Exit(1)
+		}
+	}(file)
+}
+`, year, day)
+
+	writeFile([]byte(goMainContent), year, day, "main.go")
 }
 
 func main() {
@@ -155,5 +220,6 @@ func main() {
 		panic(err)
 	}
 
-	writeInputFile(response, year, day)
+	writeFile(response, year, day, "input.txt")
+	putBasicFiles(year, day)
 }
