@@ -96,17 +96,17 @@ func (p *Parser) generateFSM() (map[rules.ParsingRuleInterface]fsm.State[Parsing
 
 			args.currentToken = args.tokens[args.currentIndex]
 
-			node, err := rule.Match(args.tokens, args.currentIndex)
+			node, err, consumed := rule.Match(args.tokens, args.currentIndex)
 			if err != nil {
 				return args, nil, fmt.Errorf("rule %s failed to match: %w", rule.Symbol(), err)
 			}
 			if node == nil {
-				args.currentIndex += 1
+				args.currentIndex += consumed
 				return args, startState, nil
 			}
 
 			args.currentBuffer.Children = append(args.currentBuffer.Children, node)
-			args.currentIndex += len(node.Children) + 1
+			args.currentIndex += consumed
 
 			return args, startState, nil
 		}

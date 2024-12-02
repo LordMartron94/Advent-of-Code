@@ -16,7 +16,7 @@ func NewRuleset(rules []ParsingRuleInterface) *Ruleset {
 
 func (rs *Ruleset) GetMatchingRule(input []*shared.Token, currentIndex int) (ParsingRuleInterface, error) {
 	for _, rule := range rs.Rules {
-		_, err := rule.Match(input, currentIndex)
+		_, err, _ := rule.Match(input, currentIndex)
 
 		if err == nil {
 			//fmt.Println(fmt.Sprintf("Matched rule (ruleSet Matcher): %s for input '%s'", rule.GetName(), string(input)))

@@ -135,7 +135,7 @@ func putBasicFiles(year, day int) {
 		dayS = "0" + dayS
 	}
 
-	goModContent := fmt.Sprintf(`module github.com/LordMartron94/Advent-of-Code/{%d}/Day-{%s}
+	goModContent := fmt.Sprintf(`module github.com/LordMartron94/Advent-of-Code/%d/Day-%s
 
 go 1.23
 `, year, dayS)

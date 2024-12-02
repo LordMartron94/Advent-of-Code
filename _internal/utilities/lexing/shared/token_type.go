@@ -7,4 +7,6 @@ const (
 	EOFToken
 	NumberToken
 	WhitespaceToken
+	SpaceToken
+	NewLineToken
 )

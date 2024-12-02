@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/LordMartron94/Advent-of-Code/2024/Day-02/pipeline/common"
+	"github.com/LordMartron94/Advent-of-Code/2024/Day-02/pipeline/pipes"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
+	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
 
 const year = 2024
@@ -38,4 +41,16 @@ func main() {
 			os.Exit(1)
 		}
 	}(file)
+
+	pipesToRun := []pipeline2.Pipe[common.PipelineContext]{
+		&pipes.GetInputDataPipe{},
+		&pipes.TransformDataPipe{},
+	}
+
+	startingContext := common.NewPipelineContext(file)
+	pipeline := pipeline2.NewPipeline(pipesToRun)
+	result := pipeline.Process(*startingContext)
+
+	fmt.Println(fmt.Sprintf("Number of safe reports (pt1): %d", result.SafeReports))
+	fmt.Println(fmt.Sprintf("Number of safe reports with power-up (pt2): %d", result.SafeReportsRevised))
 }

@@ -11,5 +11,6 @@ type ParsingRuleInterface interface {
 
 	// Match checks if the given sequence of tokens matches this rule's pattern.
 	// It might return a ParseTree node if successful, or an error if it fails.
-	Match(tokens []*shared.Token, currentIndex int) (*shared2.ParseTree, error)
+	// It will also return the amount of tokens consumed by the match.
+	Match(tokens []*shared.Token, currentIndex int) (*shared2.ParseTree, error, int)
 }
