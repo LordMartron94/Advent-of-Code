@@ -26,11 +26,11 @@ type Lexer struct {
 	index int
 
 	ruleSet  *default_rules.Ruleset
-	stateMap map[default_rules.LexingRule]fsm.State[LexerStateArgs]
+	stateMap map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs]
 }
 
 // NewLexer creates a new Lexer with the given reader.
-func NewLexer(reader io.Reader, rules []default_rules.LexingRule) *Lexer {
+func NewLexer(reader io.Reader, rules []default_rules.LexingRuleInterface) *Lexer {
 	bReader := bufio.NewReader(reader)
 
 	runes := make([]rune, 0)
@@ -67,8 +67,8 @@ func (l *Lexer) GetRuleset() default_rules.Ruleset {
 	return *l.ruleSet
 }
 
-func (l *Lexer) generateFSM() (map[default_rules.LexingRule]fsm.State[LexerStateArgs], error) {
-	stateMap := make(map[default_rules.LexingRule]fsm.State[LexerStateArgs])
+func (l *Lexer) generateFSM() (map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs], error) {
+	stateMap := make(map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs])
 
 	for _, rule := range l.ruleSet.Rules {
 		stateMap[rule] = func(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
@@ -175,6 +175,8 @@ func startState(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.S
 }
 
 func (l *Lexer) GetNextToken() *shared.Token {
+	//fmt.Println("Getting token...")
+
 	args, err := fsm.Run(context.Background(), LexerStateArgs{
 		lexer:         l,
 		CurrentToken:  nil,
@@ -207,4 +209,9 @@ func (l *Lexer) GetTokens() []*shared.Token {
 	}
 
 	return tokens
+}
+
+// Reset resets the lexer's index and buffer.
+func (l *Lexer) Reset() {
+	l.index = -1
 }

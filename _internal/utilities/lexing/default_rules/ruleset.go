@@ -5,14 +5,14 @@ import (
 )
 
 type Ruleset struct {
-	Rules []LexingRule
+	Rules []LexingRuleInterface
 }
 
-func NewRuleset(rules []LexingRule) *Ruleset {
+func NewRuleset(rules []LexingRuleInterface) *Ruleset {
 	return &Ruleset{Rules: rules}
 }
 
-func (rs *Ruleset) GetMatchingRule(input rune) (LexingRule, error) {
+func (rs *Ruleset) GetMatchingRule(input rune) (LexingRuleInterface, error) {
 	for _, rule := range rs.Rules {
 		if rule.Match(input) {
 			//fmt.Println(fmt.Sprintf("Matched rule (ruleSet Matcher): %s for input '%s'", rule.GetName(), string(input)))

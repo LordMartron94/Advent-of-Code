@@ -1,91 +1,19 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
 )
 
 const year = "2024"
 const day = "Day-01"
-
-func readInputFile() []string {
-	// Set current working directory
-	err := os.Chdir(fmt.Sprintf("./%s/%s", year, day))
-
-	// Print current working directory
-	dir, err := os.Getwd()
-
-	if err != nil {
-		fmt.Println("Error getting current working directory:", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("Current working directory:", dir)
-
-	if err != nil {
-		fmt.Println("Error changing directory:", err)
-		os.Exit(1)
-	}
-
-	f, err := os.OpenFile("input.txt", os.O_RDONLY, 0644)
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			fmt.Println("Error closing file:", err)
-			os.Exit(1)
-		}
-	}(f)
-
-	if err != nil {
-		fmt.Println("Error opening file:", err)
-		os.Exit(1)
-	}
-
-	scanner := bufio.NewScanner(f)
-	var lines []string
-
-	for scanner.Scan() {
-		lines = append(lines, scanner.Text())
-	}
-
-	return lines
-}
-
-func parseInput(lines []string) ([]int, []int) {
-	num1Slice := make([]int, len(lines))
-	num2Slice := make([]int, len(lines))
-
-	for i, line := range lines {
-		parts := strings.Split(line, "   ")
-		for j, part := range parts {
-			if j == 0 {
-				num1, err := strconv.Atoi(part)
-				if err != nil {
-					fmt.Println("Error parsing number:", err)
-					os.Exit(1)
-				}
-				num1Slice[i] = num1
-			} else if j == 1 {
-				num2, err := strconv.Atoi(part)
-				if err != nil {
-					fmt.Println("Error parsing number:", err)
-					os.Exit(1)
-				}
-				num2Slice[i] = num2
-			} else {
-				panic("Invalid input format")
-			}
-		}
-	}
-
-	return num1Slice, num2Slice
-}
 
 func transformPairsToDistances(num1Slice, num2Slice []int) []int {
 	distances := make([]int, len(num1Slice))
@@ -112,15 +40,6 @@ func sum(distances []int) int {
 	return sum
 }
 
-func sliceContains(slice []int, target int) bool {
-	for _, num := range slice {
-		if num == target {
-			return true
-		}
-	}
-	return false
-}
-
 func getNumAppearancesInSlice(slice []int, target int) int {
 	result := 0
 
@@ -130,7 +49,6 @@ func getNumAppearancesInSlice(slice []int, target int) int {
 		}
 	}
 
-	//fmt.Println(fmt.Sprintf("Gotten appearances for target %d: %d", target, result))
 	return result
 }
 
@@ -157,11 +75,44 @@ func getAppearancesMap(num1Slice, num2Slice []int) map[int]int {
 	return appearances
 }
 
+func GetSlicesFromParseTree(tree shared.ParseTree) ([]int, []int) {
+	nodes := tree.Children
+
+	num1Slice := make([]int, len(nodes))
+	num2Slice := make([]int, len(nodes))
+
+	for i, node := range nodes {
+		if node.Symbol != "pair" {
+			fmt.Println("Invalid node type:", node.Symbol)
+		}
+
+		for _, child := range node.Children {
+			if child.Symbol == "first_number" {
+				num1, err := strconv.Atoi(string(child.Token.Value))
+				if err != nil {
+					fmt.Println("Error parsing number:", err)
+					os.Exit(1)
+				}
+				num1Slice[i] = num1
+			} else if child.Symbol == "second_number" {
+				num2, err := strconv.Atoi(string(child.Token.Value))
+				if err != nil {
+					fmt.Println("Error parsing number:", err)
+					os.Exit(1)
+				}
+				num2Slice[i] = num2
+			} else {
+				fmt.Println("Invalid child node type:", child.Symbol)
+			}
+		}
+	}
+
+	return num1Slice, num2Slice
+}
+
 func main() {
-	// Set current working directory
 	err := os.Chdir(fmt.Sprintf("./%s/%s", year, day))
 
-	// Print current working directory
 	dir, err := os.Getwd()
 
 	if err != nil {
@@ -176,7 +127,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	file, err := os.OpenFile("test.txt", os.O_RDONLY, 0644)
+	file, err := os.OpenFile("input.txt", os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		os.Exit(1)
@@ -189,44 +140,42 @@ func main() {
 		}
 	}(file)
 
-	rules := make([]default_rules.LexingRule, 0)
-	rules = append(rules, &default_rules.WhitespaceRule{})
-	rules = append(rules, &default_rules.DigitRule{})
+	lexingRules := make([]default_rules.LexingRuleInterface, 0)
+	lexingRules = append(lexingRules, &default_rules.WhitespaceRule{})
+	lexingRules = append(lexingRules, &default_rules.DigitRule{})
 
-	fileHandler := utilities.NewFileHandler(file, rules)
-
-	tokens := fileHandler.Lex()
-
-	for _, token := range tokens {
-		fmt.Println(fmt.Sprintf("Token (%d) - %s", token.Type, token.Value))
+	parsingRules := []rules.ParsingRuleInterface{
+		&rules.PairRule{},
+		&rules.WhitespaceRule{},
+		&rules.NumberRule{},
 	}
 
-	//const numOneResult = 2226302
+	fileHandler := utilities.NewFileHandler(file, lexingRules, parsingRules)
+
+	parseTree, err := fileHandler.Parse()
+
+	if err != nil {
+		fmt.Println("Error parsing file:", err)
+		os.Exit(1)
+	}
+
+	num1Slice, num2Slice := GetSlicesFromParseTree(*parseTree)
 	//
-	//lines := readInputFile()
-	//num1Slice, num2Slice := parseInput(lines)
-	//
-	//// Sort both lists in ascending order
-	//sort.Ints(num1Slice)
-	//sort.Ints(num2Slice)
-	//
-	//distances := transformPairsToDistances(num1Slice, num2Slice)
-	//
-	//totalDistance := sum(distances)
-	//
-	//fmt.Printf("Total distance for the tokens: %d\n", totalDistance)
-	//
-	//appearancesMap := getAppearancesMap(num1Slice, num2Slice)
-	//increases := getIncreases(appearancesMap, num1Slice)
-	//sumIncreases := sum(increases)
-	//
-	//fmt.Printf("Sum of increases: %d\n", sumIncreases)
-	//
-	//if sumIncreases == numOneResult {
-	//	fmt.Println("Solution for test 1 is correct.")
-	//} else {
-	//	fmt.Println("Solution for test 1 is incorrect.")
-	//}
+	// Sort both lists in ascending order
+	sort.Ints(num1Slice)
+	sort.Ints(num2Slice)
+
+	distances := transformPairsToDistances(num1Slice, num2Slice)
+
+	totalDistance := sum(distances)
+
+	fmt.Printf("Total distance for the tokens: %d\n", totalDistance)
+
+	appearancesMap := getAppearancesMap(num1Slice, num2Slice)
+	increases := getIncreases(appearancesMap, num1Slice)
+	sumIncreases := sum(increases)
+
+	fmt.Printf("Sum of increases: %d\n", sumIncreases)
 }
 
 func getIncreases(appearancesMap map[int]int, slice []int) []int {
