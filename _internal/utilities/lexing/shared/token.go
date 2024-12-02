@@ -1,4 +1,4 @@
-package lexing
+package shared
 
 // Token represents a lexical token
 type Token struct {

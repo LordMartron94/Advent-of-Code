@@ -1,4 +1,4 @@
-package lexing
+package shared
 
 type TokenType int
 
