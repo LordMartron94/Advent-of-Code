@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/fsm"
@@ -75,14 +74,33 @@ func (l *Lexer) generateFSM() (map[default_rules.LexingRule]fsm.State[LexerState
 
 	for _, rule := range l.ruleSet.Rules {
 		stateMap[rule] = func(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
-			peekRune, err := args.lexer.Peek()
+			cRune, err := args.lexer.Consume()
+			args, _, err = handleConsumeErr(err, args)
+
+			if err != nil {
+				if err == io.EOF {
+					t := rule.CreateToken(args.currentBuffer)
+					args.CurrentToken = t
+					return args, nil, err
+				}
+
+				return args, nil, err
+			}
+
+			matchedRule2, err := args.lexer.ruleSet.GetMatchingRule(cRune)
 			if err != nil {
 				return args, nil, err
 			}
 
-			fmt.Println("Current rune: ", string(peekRune))
-
-			return args, nil, nil
+			if matchedRule2 == rule {
+				args.currentBuffer.WriteRune(cRune)
+				return args, l.stateMap[matchedRule2], nil
+			} else {
+				args.lexer.Pushback()
+				t := rule.CreateToken(args.currentBuffer)
+				args.CurrentToken = t
+				return args, nil, nil
+			}
 		}
 	}
 
@@ -140,7 +158,7 @@ func handleConsumeErr(err error, args LexerStateArgs) (LexerStateArgs, fsm.State
 	return args, nil, nil
 }
 
-func startState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+func startState(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
 	initialChar, err := args.lexer.Consume()
 	args, _, err = handleConsumeErr(err, args)
 
@@ -154,36 +172,8 @@ func startState(_ context.Context, args LexerStateArgs) (LexerStateArgs, fsm.Sta
 	}
 
 	args.currentBuffer.WriteRune(initialChar)
-
-	for {
-		cRune, err := args.lexer.Consume()
-		args, _, err = handleConsumeErr(err, args)
-
-		if err != nil {
-			if err == io.EOF {
-				t := matchedRule.CreateToken(args.currentBuffer)
-				args.CurrentToken = t
-				return args, nil, err
-			}
-
-			return args, nil, err
-		}
-
-		matchedRule2, err := args.lexer.ruleSet.GetMatchingRule(cRune)
-		if err != nil {
-			return args, nil, err
-		}
-
-		if matchedRule2 == matchedRule {
-			args.currentBuffer.WriteRune(cRune)
-			continue
-		} else {
-			args.lexer.Pushback()
-			t := matchedRule.CreateToken(args.currentBuffer)
-			args.CurrentToken = t
-			return args, nil, nil
-		}
-	}
+	fn := args.lexer.stateMap[matchedRule]
+	return fn(ctx, args)
 }
 
 func (l *Lexer) GetNextToken() *shared.Token {
