@@ -6,9 +6,9 @@ import (
 	"context"
 	"io"
 
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/fsm"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/fsm"
 )
 
 // TODO - Refactor for readability and maintainability

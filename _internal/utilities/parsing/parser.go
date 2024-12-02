@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/fsm"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
 	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/fsm"
 )
 
 // Parser is a struct to represent a parser
@@ -62,7 +62,7 @@ func (p *Parser) Parse() (*shared2.ParseTree, error) {
 		currentToken: nil,
 		currentIndex: 0,
 		currentBuffer: &shared2.ParseTree{
-			Symbol: "Root",
+			Symbol: "root",
 		},
 		parser: p,
 	}
