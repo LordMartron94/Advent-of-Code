@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
 )
 
 const year = "2024"
@@ -188,7 +189,11 @@ func main() {
 		}
 	}(file)
 
-	fileHandler := utilities.NewFileHandler(file)
+	rules := make([]default_rules.LexingRule, 0)
+	rules = append(rules, &default_rules.WhitespaceRule{})
+	rules = append(rules, &default_rules.DigitRule{})
+
+	fileHandler := utilities.NewFileHandler(file, rules)
 
 	tokens := fileHandler.Lex()
 

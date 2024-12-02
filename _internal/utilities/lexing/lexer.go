@@ -11,6 +11,8 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 )
 
+// TODO - Refactor for readability and maintainability
+
 type LexerStateArgs struct {
 	lexer *Lexer
 
@@ -28,7 +30,7 @@ type Lexer struct {
 }
 
 // NewLexer creates a new Lexer with the given reader.
-func NewLexer(reader io.Reader) *Lexer {
+func NewLexer(reader io.Reader, rules []default_rules.LexingRule) *Lexer {
 	bReader := bufio.NewReader(reader)
 
 	runes := make([]rune, 0)
@@ -47,10 +49,6 @@ func NewLexer(reader io.Reader) *Lexer {
 		runes: runes,
 		index: -1,
 	}
-
-	rules := make([]default_rules.LexingRule, 0)
-	rules = append(rules, &default_rules.WhitespaceRule{})
-	rules = append(rules, &default_rules.DigitRule{})
 
 	lexer.ruleSet = default_rules.NewRuleset(rules)
 
