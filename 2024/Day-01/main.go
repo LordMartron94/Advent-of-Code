@@ -10,6 +10,9 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming/common_callbacks"
+	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming/shared"
 )
 
 const year = "2024"
@@ -76,36 +79,21 @@ func getAppearancesMap(num1Slice, num2Slice []int) map[int]int {
 }
 
 func GetSlicesFromParseTree(tree shared.ParseTree) ([]int, []int) {
-	nodes := tree.Children
+	num1Slice := make([]int, 0)
+	num2Slice := make([]int, 0)
 
-	num1Slice := make([]int, len(nodes))
-	num2Slice := make([]int, len(nodes))
-
-	for i, node := range nodes {
-		if node.Symbol != "pair" {
-			fmt.Println("Invalid node type:", node.Symbol)
+	callbackFinder := func(node *shared.ParseTree) shared2.TransformCallback {
+		switch node.Symbol {
+		case "first_number":
+			return common_callbacks.AppendTokenValueToSlice(&num1Slice, strconv.Atoi)
+		case "second_number":
+			return common_callbacks.AppendTokenValueToSlice(&num2Slice, strconv.Atoi)
 		}
-
-		for _, child := range node.Children {
-			if child.Symbol == "first_number" {
-				num1, err := strconv.Atoi(string(child.Token.Value))
-				if err != nil {
-					fmt.Println("Error parsing number:", err)
-					os.Exit(1)
-				}
-				num1Slice[i] = num1
-			} else if child.Symbol == "second_number" {
-				num2, err := strconv.Atoi(string(child.Token.Value))
-				if err != nil {
-					fmt.Println("Error parsing number:", err)
-					os.Exit(1)
-				}
-				num2Slice[i] = num2
-			} else {
-				fmt.Println("Invalid child node type:", child.Symbol)
-			}
-		}
+		return nil
 	}
+
+	transformer := transforming.NewTransformer(callbackFinder)
+	transformer.Transform(&tree)
 
 	return num1Slice, num2Slice
 }
@@ -160,7 +148,7 @@ func main() {
 	}
 
 	num1Slice, num2Slice := GetSlicesFromParseTree(*parseTree)
-	//
+
 	// Sort both lists in ascending order
 	sort.Ints(num1Slice)
 	sort.Ints(num2Slice)
