@@ -9,8 +9,8 @@ import (
 )
 
 // ApplyBinaryOperationToChildren applies a binary operation to the children of a given node and appends the result to the provided slice.
-func ApplyBinaryOperationToChildren(operation func(left, right int) int, result *[]int) shared2.TransformCallback {
-	return func(node *shared.ParseTree) {
+func ApplyBinaryOperationToChildren[T comparable](operation func(left, right int) int, result *[]int) shared2.TransformCallback[T] {
+	return func(node *shared.ParseTree[T]) {
 		if len(node.Children) < 2 {
 			fmt.Println("Invalid binary operation node. Too few children for binary operation. Expected 2, got", len(node.Children))
 			return

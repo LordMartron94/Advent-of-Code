@@ -15,9 +15,9 @@ import (
 )
 
 // FileHandler is a utility struct for Advent of Code file handling.
-type FileHandler struct {
-	lexer  *lexing.Lexer
-	parser *parsing.Parser
+type FileHandler[T comparable] struct {
+	lexer  *lexing.Lexer[T]
+	parser *parsing.Parser[T]
 }
 
 func ChangeWorkingDirectoryToTodayTask() {
@@ -42,22 +42,22 @@ func ChangeWorkingDirectoryToSpecificTask(year int, day int) {
 	}
 }
 
-func NewFileHandler(reader io.Reader, lexingRules []default_rules.LexingRuleInterface, parsingRules []rules.ParsingRuleInterface) *FileHandler {
-	lexer := lexing.NewLexer(reader, lexingRules)
+func NewFileHandler[T comparable](reader io.Reader, lexingRules []default_rules.LexingRuleInterface[T], parsingRules []rules.ParsingRuleInterface[T], eofTokenType T) *FileHandler[T] {
+	lexer := lexing.NewLexer[T](reader, lexingRules, eofTokenType)
 
-	return &FileHandler{
+	return &FileHandler[T]{
 		lexer:  lexer,
-		parser: parsing.NewParser(lexer, parsingRules)}
+		parser: parsing.NewParser[T](lexer, parsingRules)}
 }
 
-func (fh *FileHandler) Lex() []*shared.Token {
+func (fh *FileHandler[T]) Lex() []*shared.Token[T] {
 	return fh.lexer.GetTokens()
 }
 
-func (fh *FileHandler) Parse() (*shared2.ParseTree, error) {
+func (fh *FileHandler[T]) Parse() (*shared2.ParseTree[T], error) {
 	return fh.parser.Parse()
 }
 
-func (fh *FileHandler) ResetLexer() {
+func (fh *FileHandler[T]) ResetLexer() {
 	fh.lexer.Reset()
 }

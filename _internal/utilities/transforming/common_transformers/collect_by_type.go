@@ -5,8 +5,8 @@ import (
 	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming/shared"
 )
 
-func CollectNodesByType(nodeType string, target *[]*shared.ParseTree) shared2.TransformCallback {
-	return func(node *shared.ParseTree) {
+func CollectNodesByType[T comparable](nodeType string, target *[]*shared.ParseTree[T]) shared2.TransformCallback[T] {
+	return func(node *shared.ParseTree[T]) {
 		if node.Symbol == nodeType {
 			*target = append(*target, node)
 		}

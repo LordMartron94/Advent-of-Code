@@ -5,8 +5,8 @@ import (
 	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming/shared"
 )
 
-func CombineCallbacks(callbacks ...shared2.TransformCallback) shared2.TransformCallback {
-	return func(node *shared.ParseTree) {
+func CombineCallbacks[T comparable](callbacks ...shared2.TransformCallback[T]) shared2.TransformCallback[T] {
+	return func(node *shared.ParseTree[T]) {
 		for _, callback := range callbacks {
 			callback(node)
 		}

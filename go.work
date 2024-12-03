@@ -5,6 +5,7 @@ use (
 	_internal/utilities
 	2024/Day-01
 	2024/Day-02
+	2024/Day-03
 )
 
 replace github.com/LordMartron94/Advent-of-Code/_internal/utilities v0.0.0-unpublished => "./_internal/utilities"

@@ -5,26 +5,26 @@ import (
 	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming/shared"
 )
 
-type TransformFindFunc func(node *shared.ParseTree) (shared2.TransformCallback, int)
+type TransformFindFunc[T comparable] func(node *shared.ParseTree[T]) (shared2.TransformCallback[T], int)
 
 // Transformer takes a parsetree and applies a specified callback transformation to it
-type Transformer struct {
-	callbackFinder   TransformFindFunc
-	callbacksByOrder map[int][]shared2.TransformCallback
-	callbackNodes    map[int][]*shared.ParseTree
+type Transformer[T comparable] struct {
+	callbackFinder   TransformFindFunc[T]
+	callbacksByOrder map[int][]shared2.TransformCallback[T]
+	callbackNodes    map[int][]*shared.ParseTree[T]
 }
 
 // NewTransformer creates a new Transformer with the given callbackFinders
-func NewTransformer(callbackFinder TransformFindFunc) *Transformer {
-	return &Transformer{
+func NewTransformer[T comparable](callbackFinder TransformFindFunc[T]) *Transformer[T] {
+	return &Transformer[T]{
 		callbackFinder:   callbackFinder,
-		callbacksByOrder: make(map[int][]shared2.TransformCallback),
-		callbackNodes:    make(map[int][]*shared.ParseTree),
+		callbacksByOrder: make(map[int][]shared2.TransformCallback[T]),
+		callbackNodes:    make(map[int][]*shared.ParseTree[T]),
 	}
 }
 
 // Transform applies the transformations to the given parsetree recursively
-func (t *Transformer) Transform(tree *shared.ParseTree) {
+func (t *Transformer[T]) Transform(tree *shared.ParseTree[T]) {
 	t.transformRecursive(tree)
 
 	// execute callbacks in order of appearance
@@ -39,7 +39,7 @@ func (t *Transformer) Transform(tree *shared.ParseTree) {
 	}
 }
 
-func (t *Transformer) transformRecursive(tree *shared.ParseTree) {
+func (t *Transformer[T]) transformRecursive(tree *shared.ParseTree[T]) {
 	// Produce callbacks for the current node
 	callback, order := t.callbackFinder(tree)
 	t.callbacksByOrder[order] = append(t.callbacksByOrder[order], callback)

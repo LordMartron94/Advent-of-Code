@@ -1,6 +1,13 @@
 package default_rules
 
-type PeekInterface interface {
+type LexerInterface interface {
 	Peek() (rune, error)
-	GetRuleset() Ruleset
+	PeekN(n int) ([]rune, error)
+	Consume() (rune, error)
+	Pushback()
+	LookBack(n int) ([]rune, error)
+}
+
+type GetRuleSetInterface[T any] interface {
+	GetRuleset() Ruleset[T]
 }

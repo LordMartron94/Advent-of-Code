@@ -12,25 +12,29 @@ import (
 )
 
 // TODO - Refactor for readability and maintainability
+// TODO - IMPORTANT - add capacity for easy multicharacter lexing... Really difficult now.
+// Take inspiration from the parser - it's really easy there
 
-type LexerStateArgs struct {
-	lexer *Lexer
+type LexerStateArgs[T comparable] struct {
+	lexer        *Lexer[T]
+	eofTokenType T
 
-	CurrentToken  *shared.Token
+	CurrentToken  *shared.Token[T]
 	currentBuffer *bytes.Buffer
 }
 
 // Lexer is a struct for lexing input.
-type Lexer struct {
-	runes []rune
-	index int
+type Lexer[T comparable] struct {
+	runes        []rune
+	index        int
+	eofTokenType T
 
-	ruleSet  *default_rules.Ruleset
-	stateMap map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs]
+	ruleSet  *default_rules.Ruleset[T]
+	stateMap map[default_rules.LexingRuleInterface[T]]fsm.State[LexerStateArgs[T]]
 }
 
 // NewLexer creates a new Lexer with the given reader.
-func NewLexer(reader io.Reader, rules []default_rules.LexingRuleInterface) *Lexer {
+func NewLexer[T comparable](reader io.Reader, rules []default_rules.LexingRuleInterface[T], eofTokenType T) *Lexer[T] {
 	bReader := bufio.NewReader(reader)
 
 	runes := make([]rune, 0)
@@ -45,12 +49,13 @@ func NewLexer(reader io.Reader, rules []default_rules.LexingRuleInterface) *Lexe
 		runes = append(runes, scannedRune)
 	}
 
-	lexer := &Lexer{
-		runes: runes,
-		index: -1,
+	lexer := &Lexer[T]{
+		runes:        runes,
+		index:        -1,
+		eofTokenType: eofTokenType,
 	}
 
-	lexer.ruleSet = default_rules.NewRuleset(rules)
+	lexer.ruleSet = default_rules.NewRuleset[T](rules)
 
 	sM, err := lexer.generateFSM()
 
@@ -63,15 +68,15 @@ func NewLexer(reader io.Reader, rules []default_rules.LexingRuleInterface) *Lexe
 	return lexer
 }
 
-func (l *Lexer) GetRuleset() default_rules.Ruleset {
+func (l *Lexer[T]) GetRuleset() default_rules.Ruleset[T] {
 	return *l.ruleSet
 }
 
-func (l *Lexer) generateFSM() (map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs], error) {
-	stateMap := make(map[default_rules.LexingRuleInterface]fsm.State[LexerStateArgs])
+func (l *Lexer[T]) generateFSM() (map[default_rules.LexingRuleInterface[T]]fsm.State[LexerStateArgs[T]], error) {
+	stateMap := make(map[default_rules.LexingRuleInterface[T]]fsm.State[LexerStateArgs[T]])
 
 	for _, rule := range l.ruleSet.Rules {
-		stateMap[rule] = func(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+		stateMap[rule] = func(ctx context.Context, args LexerStateArgs[T]) (LexerStateArgs[T], fsm.State[LexerStateArgs[T]], error) {
 			cRune, err := args.lexer.Consume()
 			args, _, err = handleConsumeErr(err, args)
 
@@ -85,7 +90,7 @@ func (l *Lexer) generateFSM() (map[default_rules.LexingRuleInterface]fsm.State[L
 				return args, nil, err
 			}
 
-			matchedRule2, err := args.lexer.ruleSet.GetMatchingRule(cRune)
+			matchedRule2, err := args.lexer.ruleSet.GetMatchingRule(cRune, l)
 			if err != nil {
 				return args, nil, err
 			}
@@ -106,7 +111,7 @@ func (l *Lexer) generateFSM() (map[default_rules.LexingRuleInterface]fsm.State[L
 }
 
 // Peek returns the next rune without advancing the lexer's index.
-func (l *Lexer) Peek() (rune, error) {
+func (l *Lexer[T]) Peek() (rune, error) {
 	if l.index+1 >= len(l.runes) {
 		return ' ', io.EOF
 	}
@@ -114,8 +119,17 @@ func (l *Lexer) Peek() (rune, error) {
 	return l.runes[l.index+1], nil
 }
 
+// PeekN returns the next N runes without advancing the lexer's index.
+func (l *Lexer[T]) PeekN(n int) ([]rune, error) {
+	if l.index+n >= len(l.runes) {
+		return nil, io.EOF
+	}
+
+	return l.runes[l.index+1 : l.index+n+1], nil
+}
+
 // Consume returns the next rune and advances the lexer's index.
-func (l *Lexer) Consume() (rune, error) {
+func (l *Lexer[T]) Consume() (rune, error) {
 	if l.index+1 >= len(l.runes) {
 		return ' ', io.EOF
 	}
@@ -126,14 +140,22 @@ func (l *Lexer) Consume() (rune, error) {
 }
 
 // Pushback reverts the lexer's index to the previous position.
-func (l *Lexer) Pushback() {
+func (l *Lexer[T]) Pushback() {
 	if l.index >= 0 {
 		l.index--
 	}
 }
 
+func (l *Lexer[T]) LookBack(n int) ([]rune, error) {
+	if l.index-n < 0 {
+		return nil, io.EOF
+	}
+
+	return l.runes[l.index-n : l.index+1], nil
+}
+
 // Current returns the current rune at the lexer's index.
-func (l *Lexer) Current() rune {
+func (l *Lexer[T]) Current() rune {
 	if l.index >= len(l.runes) {
 		return ' '
 	}
@@ -141,11 +163,11 @@ func (l *Lexer) Current() rune {
 	return l.runes[l.index]
 }
 
-func handleConsumeErr(err error, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+func handleConsumeErr[T comparable](err error, args LexerStateArgs[T]) (LexerStateArgs[T], fsm.State[LexerStateArgs[T]], error) {
 	if err != nil {
 		if err == io.EOF {
-			args.CurrentToken = &shared.Token{
-				Type:  shared.EOFToken,
+			args.CurrentToken = &shared.Token[T]{
+				Type:  args.eofTokenType,
 				Value: nil,
 			}
 		}
@@ -156,7 +178,7 @@ func handleConsumeErr(err error, args LexerStateArgs) (LexerStateArgs, fsm.State
 	return args, nil, nil
 }
 
-func startState(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.State[LexerStateArgs], error) {
+func startState[T comparable](ctx context.Context, args LexerStateArgs[T]) (LexerStateArgs[T], fsm.State[LexerStateArgs[T]], error) {
 	initialChar, err := args.lexer.Consume()
 	args, _, err = handleConsumeErr(err, args)
 
@@ -164,7 +186,7 @@ func startState(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.S
 		return args, nil, err
 	}
 
-	matchedRule, err := args.lexer.ruleSet.GetMatchingRule(initialChar)
+	matchedRule, err := args.lexer.ruleSet.GetMatchingRule(initialChar, args.lexer)
 	if err != nil {
 		return args, nil, err
 	}
@@ -174,13 +196,14 @@ func startState(ctx context.Context, args LexerStateArgs) (LexerStateArgs, fsm.S
 	return fn(ctx, args)
 }
 
-func (l *Lexer) GetNextToken() *shared.Token {
+func (l *Lexer[T]) GetNextToken() *shared.Token[T] {
 	//fmt.Println("Getting token...")
 
-	args, err := fsm.Run(context.Background(), LexerStateArgs{
+	args, err := fsm.Run(context.Background(), LexerStateArgs[T]{
 		lexer:         l,
 		CurrentToken:  nil,
 		currentBuffer: &bytes.Buffer{},
+		eofTokenType:  l.eofTokenType,
 	}, startState)
 
 	if err != nil && err != io.EOF {
@@ -191,8 +214,8 @@ func (l *Lexer) GetNextToken() *shared.Token {
 }
 
 // GetTokens retrieves all tokens from the lexer's input.
-func (l *Lexer) GetTokens() []*shared.Token {
-	tokens := make([]*shared.Token, 0)
+func (l *Lexer[T]) GetTokens() []*shared.Token[T] {
+	tokens := make([]*shared.Token[T], 0)
 
 	for {
 		token := l.GetNextToken()
@@ -201,7 +224,7 @@ func (l *Lexer) GetTokens() []*shared.Token {
 			continue
 		}
 
-		if token.Type == shared.EOFToken {
+		if token.Type == l.eofTokenType {
 			break
 		}
 
@@ -212,6 +235,6 @@ func (l *Lexer) GetTokens() []*shared.Token {
 }
 
 // Reset resets the lexer's index and buffer.
-func (l *Lexer) Reset() {
+func (l *Lexer[T]) Reset() {
 	l.index = -1
 }

@@ -12,17 +12,17 @@ import (
 )
 
 // Parser is a struct to represent a parser
-type Parser struct {
-	lexer    *lexing.Lexer
-	ruleSet  *rules.Ruleset
-	stateMap map[rules.ParsingRuleInterface]fsm.State[ParsingStateArgs]
+type Parser[T comparable] struct {
+	lexer    *lexing.Lexer[T]
+	ruleSet  *rules.Ruleset[T]
+	stateMap map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]]
 }
 
 // NewParser creates a new parser from the given input
-func NewParser(lexer *lexing.Lexer, parsingRules []rules.ParsingRuleInterface) *Parser {
-	parser := &Parser{
+func NewParser[T comparable](lexer *lexing.Lexer[T], parsingRules []rules.ParsingRuleInterface[T]) *Parser[T] {
+	parser := &Parser[T]{
 		lexer:   lexer,
-		ruleSet: rules.NewRuleset(parsingRules),
+		ruleSet: rules.NewRuleset[T](parsingRules),
 	}
 
 	stateMap, err := parser.generateFSM()
@@ -35,7 +35,7 @@ func NewParser(lexer *lexing.Lexer, parsingRules []rules.ParsingRuleInterface) *
 	return parser
 }
 
-func startState(ctx context.Context, args ParsingStateArgs) (ParsingStateArgs, fsm.State[ParsingStateArgs], error) {
+func startState[T comparable](ctx context.Context, args ParsingStateArgs[T]) (ParsingStateArgs[T], fsm.State[ParsingStateArgs[T]], error) {
 	if args.currentIndex >= len(args.tokens) {
 		return args, nil, nil
 	}
@@ -52,16 +52,17 @@ func startState(ctx context.Context, args ParsingStateArgs) (ParsingStateArgs, f
 }
 
 // Parse parses the input and returns the parse tree
-func (p *Parser) Parse() (*shared2.ParseTree, error) {
+func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 	// Reset lexer to be sure it works
 	p.lexer.Reset()
 	tokens := p.lexer.GetTokens()
+	fmt.Println("Starting Parsing Process...")
 
-	args := ParsingStateArgs{
+	args := ParsingStateArgs[T]{
 		tokens:       tokens,
 		currentToken: nil,
 		currentIndex: 0,
-		currentBuffer: &shared2.ParseTree{
+		currentBuffer: &shared2.ParseTree[T]{
 			Symbol: "root",
 		},
 		parser: p,
@@ -72,24 +73,26 @@ func (p *Parser) Parse() (*shared2.ParseTree, error) {
 		return nil, fmt.Errorf("parsing failed: %w", err)
 	}
 
+	fmt.Println("Parsing Process Complete!")
+
 	return args.currentBuffer, nil
 }
 
 // ParsingStateArgs holds the arguments for the parsing FSM
-type ParsingStateArgs struct {
-	parser        *Parser
-	tokens        []*shared.Token
-	currentToken  *shared.Token
+type ParsingStateArgs[T comparable] struct {
+	parser        *Parser[T]
+	tokens        []*shared.Token[T]
+	currentToken  *shared.Token[T]
 	currentIndex  int
-	currentBuffer *shared2.ParseTree
+	currentBuffer *shared2.ParseTree[T]
 }
 
 // generateFSM generates the FSM for parsing
-func (p *Parser) generateFSM() (map[rules.ParsingRuleInterface]fsm.State[ParsingStateArgs], error) {
-	stateMap := make(map[rules.ParsingRuleInterface]fsm.State[ParsingStateArgs])
+func (p *Parser[T]) generateFSM() (map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]], error) {
+	stateMap := make(map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]])
 
 	for _, rule := range p.ruleSet.Rules {
-		stateMap[rule] = func(ctx context.Context, args ParsingStateArgs) (ParsingStateArgs, fsm.State[ParsingStateArgs], error) {
+		stateMap[rule] = func(ctx context.Context, args ParsingStateArgs[T]) (ParsingStateArgs[T], fsm.State[ParsingStateArgs[T]], error) {
 			if args.currentIndex >= len(args.tokens) {
 				return args, nil, nil
 			}

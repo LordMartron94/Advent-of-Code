@@ -1,7 +1,7 @@
 package shared
 
 // Token represents a lexical token
-type Token struct {
-	Type  TokenType
+type Token[T any] struct {
+	Type  T
 	Value []byte
 }

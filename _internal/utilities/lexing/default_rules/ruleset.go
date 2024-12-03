@@ -4,17 +4,17 @@ import (
 	"fmt"
 )
 
-type Ruleset struct {
-	Rules []LexingRuleInterface
+type Ruleset[T any] struct {
+	Rules []LexingRuleInterface[T]
 }
 
-func NewRuleset(rules []LexingRuleInterface) *Ruleset {
-	return &Ruleset{Rules: rules}
+func NewRuleset[T any](rules []LexingRuleInterface[T]) *Ruleset[T] {
+	return &Ruleset[T]{Rules: rules}
 }
 
-func (rs *Ruleset) GetMatchingRule(input rune) (LexingRuleInterface, error) {
+func (rs *Ruleset[T]) GetMatchingRule(input rune, peeker LexerInterface) (LexingRuleInterface[T], error) {
 	for _, rule := range rs.Rules {
-		if rule.Match(input) {
+		if rule.Match(input, peeker) {
 			//fmt.Println(fmt.Sprintf("Matched rule (ruleSet Matcher): %s for input '%s'", rule.GetName(), string(input)))
 			return rule, nil
 		}
