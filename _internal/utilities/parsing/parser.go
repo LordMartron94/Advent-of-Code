@@ -13,13 +13,13 @@ import (
 
 // Parser is a struct to represent a parser
 type Parser[T comparable] struct {
-	lexer    *lexing.Lexer[T]
+	lexer    lexing.LexerInterface[T]
 	ruleSet  *rules.Ruleset[T]
 	stateMap map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]]
 }
 
 // NewParser creates a new parser from the given input
-func NewParser[T comparable](lexer *lexing.Lexer[T], parsingRules []rules.ParsingRuleInterface[T]) *Parser[T] {
+func NewParser[T comparable](lexer lexing.LexerInterface[T], parsingRules []rules.ParsingRuleInterface[T]) *Parser[T] {
 	parser := &Parser[T]{
 		lexer:   lexer,
 		ruleSet: rules.NewRuleset[T](parsingRules),
@@ -55,7 +55,12 @@ func startState[T comparable](ctx context.Context, args ParsingStateArgs[T]) (Pa
 func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 	// Reset lexer to be sure it works
 	p.lexer.Reset()
-	tokens := p.lexer.GetTokens()
+	tokens, err := p.lexer.GetTokens()
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tokens: %w", err)
+	}
+
 	fmt.Println("Starting Parsing Process...")
 
 	args := ParsingStateArgs[T]{
@@ -68,7 +73,7 @@ func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 		parser: p,
 	}
 
-	args, err := fsm.Run(context.Background(), args, startState)
+	args, err = fsm.Run(context.Background(), args, startState)
 	if err != nil {
 		return nil, fmt.Errorf("parsing failed: %w", err)
 	}

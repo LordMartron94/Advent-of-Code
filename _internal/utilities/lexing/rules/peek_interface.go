@@ -1,4 +1,4 @@
-package default_rules
+package rules
 
 type LexerInterface interface {
 	Peek() (rune, error)
@@ -6,8 +6,4 @@ type LexerInterface interface {
 	Consume() (rune, error)
 	Pushback()
 	LookBack(n int) ([]rune, error)
-}
-
-type GetRuleSetInterface[T any] interface {
-	GetRuleset() Ruleset[T]
 }
