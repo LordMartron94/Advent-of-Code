@@ -2,8 +2,9 @@ package task_rules
 
 import (
 	"bytes"
+	"fmt"
 
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/scanning"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 )
 
@@ -16,16 +17,20 @@ const (
 	CloseParenthesisToken
 	CommaToken
 	NumberToken
-	EOFToken
 	DoKeywordToken
 	DontKeywordToken
 )
 
 type MulKeywordRuleLex struct {
+	buffer *bytes.Buffer
 }
 
-func (k *MulKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	runesInBuffer, err := lexer.LookBack(3)
+func (k *MulKeywordRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if k.buffer == nil {
+		k.buffer = &bytes.Buffer{}
+	}
+
+	runesInBuffer, err := scanner.Peek(3)
 
 	if err != nil {
 		return false
@@ -39,28 +44,46 @@ func (k *MulKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) bo
 		return false
 	}
 
-	if r != 'l' {
+	if runesInBuffer[len(runesInBuffer)-1] != 'l' {
 		return false
+	}
+
+	for _, r := range runesInBuffer {
+		k.buffer.WriteRune(r)
 	}
 
 	return true
 }
 
-func (k *MulKeywordRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  MulKeywordToken,
-		Value: []byte("mul"),
+func (k *MulKeywordRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if k.buffer.Len() < 3 {
+		return nil, fmt.Errorf("invalid token: %s", k.buffer.String()), 0
 	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  MulKeywordToken,
+		Value: k.buffer.Bytes(),
+	}
+
+	k.buffer.Reset()
+
+	return t, nil, 3
 }
 
-func (k *MulKeywordRuleLex) GetName() string {
+func (k *MulKeywordRuleLex) Symbol() string {
 	return "MulKeywordRuleLex"
 }
 
-type DoKeywordRuleLex struct{}
+type DoKeywordRuleLex struct {
+	buffer *bytes.Buffer
+}
 
-func (d *DoKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	runesInBuffer, err := lexer.LookBack(2)
+func (d *DoKeywordRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if d.buffer == nil {
+		d.buffer = &bytes.Buffer{}
+	}
+
+	runesInBuffer, err := scanner.Peek(2)
 
 	if err != nil {
 		return false
@@ -70,28 +93,46 @@ func (d *DoKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) boo
 		return false
 	}
 
-	if r != 'o' {
+	if runesInBuffer[len(runesInBuffer)-1] != 'o' {
 		return false
+	}
+
+	for _, r := range runesInBuffer {
+		d.buffer.WriteRune(r)
 	}
 
 	return true
 }
 
-func (d *DoKeywordRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  DoKeywordToken,
-		Value: []byte("do"),
+func (d *DoKeywordRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if d.buffer.Len() < 2 {
+		return nil, fmt.Errorf("invalid token: %s", d.buffer.String()), 0
 	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  DoKeywordToken,
+		Value: d.buffer.Bytes(),
+	}
+
+	d.buffer.Reset()
+
+	return t, nil, 2
 }
 
-func (d *DoKeywordRuleLex) GetName() string {
+func (d *DoKeywordRuleLex) Symbol() string {
 	return "DoKeywordRuleLex"
 }
 
-type DontKeywordRuleLex struct{}
+type DontKeywordRuleLex struct {
+	buffer *bytes.Buffer
+}
 
-func (d *DontKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	runesInBuffer, err := lexer.LookBack(5)
+func (d *DontKeywordRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if d.buffer == nil {
+		d.buffer = &bytes.Buffer{}
+	}
+
+	runesInBuffer, err := scanner.Peek(5)
 
 	if err != nil {
 		return false
@@ -113,105 +154,255 @@ func (d *DontKeywordRuleLex) Match(r rune, lexer default_rules.LexerInterface) b
 		return false
 	}
 
-	if r != 't' {
+	if runesInBuffer[len(runesInBuffer)-1] != 't' {
 		return false
 	}
 
+	for _, r := range runesInBuffer {
+		d.buffer.WriteRune(r)
+	}
+
 	return true
 }
 
-func (d *DontKeywordRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  DontKeywordToken,
-		Value: []byte("don't"),
+func (d *DontKeywordRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if d.buffer.Len() < 5 {
+		return nil, fmt.Errorf("invalid token: %s", d.buffer.String()), 0
 	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  DontKeywordToken,
+		Value: d.buffer.Bytes(),
+	}
+
+	d.buffer.Reset()
+
+	return t, nil, 5
 }
 
-func (d *DontKeywordRuleLex) GetName() string {
+func (d *DontKeywordRuleLex) Symbol() string {
 	return "DontKeywordRuleLex"
 }
 
-type OpenParenthesisRuleLex struct{}
-
-func (o *OpenParenthesisRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	return r == '('
+type OpenParenthesisRuleLex struct {
+	buffer *bytes.Buffer
 }
 
-func (o *OpenParenthesisRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  OpenParenthesisToken,
-		Value: buffer.Bytes(),
+func (o *OpenParenthesisRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if o.buffer == nil {
+		o.buffer = &bytes.Buffer{}
 	}
-}
 
-func (o *OpenParenthesisRuleLex) GetName() string {
-	return "OpenParenthesisRuleLex"
-}
+	runes, err := scanner.Peek(1)
+	r := runes[0]
 
-type CloseParenthesisRuleLex struct{}
-
-func (c *CloseParenthesisRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	return r == ')'
-}
-
-func (c *CloseParenthesisRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  CloseParenthesisToken,
-		Value: buffer.Bytes(),
+	if err != nil {
+		return false
 	}
-}
 
-func (c *CloseParenthesisRuleLex) GetName() string {
-	return "CloseParenthesisRuleLex"
-}
-
-type CommaRuleLex struct{}
-
-func (c *CommaRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	return r == ','
-}
-
-func (c *CommaRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  CommaToken,
-		Value: buffer.Bytes(),
+	if r != '(' {
+		return false
 	}
-}
 
-func (c *CommaRuleLex) GetName() string {
-	return "CommaRuleLex"
-}
-
-type DigitRuleLex struct{}
-
-func (d *DigitRuleLex) Match(r rune, lexer default_rules.LexerInterface) bool {
-	return '0' <= r && r <= '9'
-}
-
-func (d *DigitRuleLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  NumberToken,
-		Value: buffer.Bytes(),
+	for _, r := range runes {
+		o.buffer.WriteRune(r)
 	}
-}
 
-func (d *DigitRuleLex) GetName() string {
-	return "DigitRuleLex"
-}
-
-type InvalidTokenLex struct{}
-
-func (i *InvalidTokenLex) Match(_ rune, lexer default_rules.LexerInterface) bool {
 	return true
 }
 
-func (i *InvalidTokenLex) CreateToken(buffer *bytes.Buffer) *shared.Token[LexingTokenType] {
-	return &shared.Token[LexingTokenType]{
-		Type:  InvalidToken,
-		Value: buffer.Bytes(),
+func (o *OpenParenthesisRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if o.buffer.Len() < 1 {
+		return nil, fmt.Errorf("invalid token: %s", o.buffer.String()), 0
 	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  OpenParenthesisToken,
+		Value: o.buffer.Bytes(),
+	}
+
+	o.buffer.Reset()
+
+	return t, nil, 1
 }
 
-func (i *InvalidTokenLex) GetName() string {
+func (o *OpenParenthesisRuleLex) Symbol() string {
+	return "OpenParenthesisRuleLex"
+}
+
+type CloseParenthesisRuleLex struct {
+	buffer *bytes.Buffer
+}
+
+func (c *CloseParenthesisRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if c.buffer == nil {
+		c.buffer = &bytes.Buffer{}
+	}
+
+	runes, err := scanner.Peek(1)
+	r := runes[0]
+
+	if err != nil {
+		return false
+	}
+
+	if r != ')' {
+		return false
+	}
+
+	for _, r := range runes {
+		c.buffer.WriteRune(r)
+	}
+
+	return true
+}
+
+func (c *CloseParenthesisRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if c.buffer.Len() < 1 {
+		return nil, fmt.Errorf("invalid token: %s", c.buffer.String()), 0
+	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  CloseParenthesisToken,
+		Value: c.buffer.Bytes(),
+	}
+
+	c.buffer.Reset()
+
+	return t, nil, 1
+}
+
+func (c *CloseParenthesisRuleLex) Symbol() string {
+	return "CloseParenthesisRuleLex"
+}
+
+type CommaRuleLex struct {
+	buffer *bytes.Buffer
+}
+
+func (c *CommaRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if c.buffer == nil {
+		c.buffer = &bytes.Buffer{}
+	}
+
+	runes, err := scanner.Peek(1)
+	r := runes[0]
+
+	if err != nil {
+		return false
+	}
+
+	if r != ',' {
+		return false
+	}
+
+	for _, r := range runes {
+		c.buffer.WriteRune(r)
+	}
+
+	return true
+}
+
+func (c *CommaRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if c.buffer.Len() < 1 {
+		return nil, fmt.Errorf("invalid token: %s", c.buffer.String()), 0
+	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  CommaToken,
+		Value: c.buffer.Bytes(),
+	}
+
+	c.buffer.Reset()
+
+	return t, nil, 1
+}
+
+func (c *CommaRuleLex) Symbol() string {
+	return "CommaRuleLex"
+}
+
+type DigitRuleLex struct {
+	buffer *bytes.Buffer
+}
+
+func (d *DigitRuleLex) IsMatch(scanner scanning.PeekInterface) bool {
+	if d.buffer == nil {
+		d.buffer = &bytes.Buffer{}
+	}
+
+	runes, err := scanner.Peek(1)
+	r := runes[0]
+
+	if err != nil {
+		return false
+	}
+
+	if r < '0' || r > '9' {
+		return false
+	}
+
+	for _, r := range runes {
+		d.buffer.WriteRune(r)
+	}
+
+	return true
+}
+
+func (d *DigitRuleLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	if d.buffer.Len() == 0 {
+		return nil, fmt.Errorf("invalid token: %s", d.buffer.String()), 0
+	}
+
+	t := &shared.Token[LexingTokenType]{
+		Type:  NumberToken,
+		Value: d.buffer.Bytes(),
+	}
+	n := d.buffer.Len()
+
+	d.buffer.Reset()
+
+	return t, nil, n
+}
+
+func (d *DigitRuleLex) Symbol() string {
+	return "DigitRuleLex"
+}
+
+type InvalidTokenLex struct {
+	buffer *bytes.Buffer
+}
+
+func (i *InvalidTokenLex) WriteRune(peeker scanning.PeekInterface) {
+	if i.buffer == nil {
+		i.buffer = &bytes.Buffer{}
+	}
+
+	runes, err := peeker.Peek(1)
+	if err != nil {
+		return
+	}
+	r := runes[0]
+
+	i.buffer.WriteRune(r)
+}
+
+func (i *InvalidTokenLex) IsMatch(_ scanning.PeekInterface) bool {
+	return true
+}
+
+func (i *InvalidTokenLex) ExtractToken() (*shared.Token[LexingTokenType], error, int) {
+	t := &shared.Token[LexingTokenType]{
+		Type:  InvalidToken,
+		Value: append([]byte(nil), i.buffer.Bytes()...),
+	}
+	n := i.buffer.Len()
+
+	i.buffer.Reset()
+
+	return t, nil, n
+}
+
+func (i *InvalidTokenLex) Symbol() string {
 	return "InvalidTokenLex"
 }

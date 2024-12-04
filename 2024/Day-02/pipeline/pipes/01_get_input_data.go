@@ -7,7 +7,7 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-02/task_rules"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
 )
 
@@ -16,10 +16,10 @@ type GetInputDataPipe struct {
 
 // Process method to process the input. Input is the filepath.
 func (g *GetInputDataPipe) Process(input common.PipelineContext) common.PipelineContext {
-	lexingRules := []default_rules.LexingRuleInterface{
+	lexingRules := []rules.LexingRuleInterface{
 		&task_rules.NewlineRuleLex{},
 		&task_rules.SpaceRuleLex{},
-		&default_rules.DigitRule{},
+		&rules.DigitRule{},
 	}
 
 	parsingRules := []rules.ParsingRuleInterface{

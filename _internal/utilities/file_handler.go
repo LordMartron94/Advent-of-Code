@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/default_rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
+	rules2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/rules"
 	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
 )
 
@@ -42,15 +42,16 @@ func ChangeWorkingDirectoryToSpecificTask(year int, day int) {
 	}
 }
 
-func NewFileHandler[T comparable](reader io.Reader, lexingRules []default_rules.LexingRuleInterface[T], parsingRules []rules.ParsingRuleInterface[T], eofTokenType T) *FileHandler[T] {
-	lexer := lexing.NewLexer[T](reader, lexingRules, eofTokenType)
+func NewFileHandler[T comparable](reader io.Reader, lexingRules []rules.LexingRuleInterface[T], parsingRules []rules2.ParsingRuleInterface[T]) *FileHandler[T] {
+	lexer := lexing.NewLexer[T](reader, lexingRules)
 
 	return &FileHandler[T]{
 		lexer:  lexer,
-		parser: parsing.NewParser[T](lexer, parsingRules)}
+		parser: parsing.NewParser[T](lexer, parsingRules),
+	}
 }
 
-func (fh *FileHandler[T]) Lex() []*shared.Token[T] {
+func (fh *FileHandler[T]) Lex() ([]*shared.Token[T], error) {
 	return fh.lexer.GetTokens()
 }
 

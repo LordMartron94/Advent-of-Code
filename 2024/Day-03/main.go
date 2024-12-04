@@ -30,7 +30,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	file, err := os.OpenFile("input.txt", os.O_RDONLY, 0644)
+	file, err := os.OpenFile("test.txt", os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		os.Exit(1)
@@ -45,13 +45,13 @@ func main() {
 
 	pipesToRun := []pipeline2.Pipe[common.PipelineContext[task_rules.LexingTokenType]]{
 		&pipes.GetInputDataPipe{},
-		&pipes.CalculateDataPipe{},
+		//&pipes.CalculateDataPipe{},
 	}
 
 	startingContext := common.NewPipelineContext[task_rules.LexingTokenType](file)
 	pipeline := pipeline2.NewPipeline(pipesToRun)
-	result := pipeline.Process(*startingContext)
+	_ = pipeline.Process(*startingContext)
 
-	fmt.Println(fmt.Sprintf("Total multiplication result (task 1): %d", result.Result))
-	fmt.Println(fmt.Sprintf("Total multiplication result with bool (task 2): %d", result.EnabledResult))
+	//fmt.Println(fmt.Sprintf("Total multiplication result (task 1): %d", result.Result))
+	//fmt.Println(fmt.Sprintf("Total multiplication result with bool (task 2): %d", result.EnabledResult))
 }
