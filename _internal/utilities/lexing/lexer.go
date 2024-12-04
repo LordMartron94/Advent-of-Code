@@ -1,7 +1,6 @@
 package lexing
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/rules"
@@ -41,13 +40,7 @@ func (l *Lexer[T]) GetToken() *shared.Token[T] {
 		panic("no matching rule found")
 	}
 
-	consumed, err := l.consumeMatchingRunes(matchingRule)
-
-	if err != nil {
-		panic(err)
-	}
-
-	return l.extractToken(consumed, matchingRule)
+	return l.extractToken(matchingRule)
 }
 
 // getMatchingRule retrieves the matching rule for the current scanner state.
@@ -62,52 +55,20 @@ func (l *Lexer[T]) getMatchingRule() (rules.LexingRuleInterface[T], error) {
 	return matchingRule, nil
 }
 
-// consumeMatchingRunes consumes runes while they match the given rule.
-func (l *Lexer[T]) consumeMatchingRunes(rule rules.LexingRuleInterface[T]) (int, error) {
-	rule.WriteRune(l.scanner)
-	consumed := 0
-	for {
-		if _, err := l.scanner.Consume(1); err != nil {
-			if err == io.EOF {
-				break
-			}
-			return consumed, err
-		}
-		consumed++
-
-		currentRule, err := l.ruleSet.GetMatchingRule(l.scanner)
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-			return consumed, err
-		}
-
-		if rule != currentRule {
-			if err := l.scanner.Pushback(1); err != nil {
-				return consumed, err
-			}
-			consumed--
-			break
-		} else {
-			rule.WriteRune(l.scanner)
-		}
-	}
-
-	_, _ = l.scanner.Consume(consumed)
-	return consumed, nil
-}
-
 // extractToken extracts the token from the matched rule.
-func (l *Lexer[T]) extractToken(consumedCount int, rule rules.LexingRuleInterface[T]) *shared.Token[T] {
-	t, err, consumedN := rule.ExtractToken()
+func (l *Lexer[T]) extractToken(rule rules.LexingRuleInterface[T]) *shared.Token[T] {
+	t, err, consumedN := rule.ExtractToken(l.scanner)
 	if err != nil {
 		panic(err)
 	}
-	
-	if consumedN != consumedCount {
-		// This should theoretically never happen, but it's a good safety net.
-		panic(fmt.Errorf("Warning: consumed %d characters but rule matched %d characters\n", consumedCount, consumedN))
+
+	_, err = l.scanner.Consume(consumedN)
+	if err != nil {
+		if err == io.EOF {
+			return nil
+		}
+
+		panic(err)
 	}
 
 	return t

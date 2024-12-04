@@ -15,8 +15,5 @@ type LexingRuleInterface[T any] interface {
 	// ExtractToken extracts a token from the given sequence of runes that matches this rule's pattern.
 	// If no match is found, it will return an error.
 	// It will also return the amount of runes consumed by the extraction.
-	ExtractToken() (*shared.Token[T], error, int)
-
-	// WriteRune includes the correct rune into the buffer for further processing.
-	WriteRune(scanner scanning.PeekInterface)
+	ExtractToken(scanner scanning.PeekInterface) (*shared.Token[T], error, int)
 }

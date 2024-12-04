@@ -2,7 +2,6 @@ package rules
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/scanning"
 )
@@ -18,16 +17,9 @@ func NewRuleset[T any](rules []LexingRuleInterface[T]) *Ruleset[T] {
 // GetMatchingRule returns the first matching rule for the given input stream.
 // If no matching rule is found, it returns an error.
 // If the input stream is exhausted before a matching rule is found, it returns io.EOF.
+// Returns the number of runes that will be consumed by the matching rule.
 func (rs *Ruleset[T]) GetMatchingRule(scanner scanning.PeekInterface) (LexingRuleInterface[T], error) {
-	_, err := scanner.Peek(1)
-
-	if err != nil {
-		if err == io.EOF {
-			return nil, io.EOF
-		}
-
-		return nil, fmt.Errorf("error peeking at scanner: %w", err)
-	}
+	_ = scanner.Current()
 
 	for _, rule := range rs.Rules {
 		matched := rule.IsMatch(scanner)

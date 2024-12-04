@@ -1,7 +1,6 @@
 package pipes
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-03/pipeline/common"
@@ -17,15 +16,17 @@ type GetInputDataPipe struct {
 
 // Process method to process the input. Input is the filepath.
 func (g *GetInputDataPipe) Process(input common.PipelineContext[task_rules.LexingTokenType]) common.PipelineContext[task_rules.LexingTokenType] {
+	lexerRuleFactory := task_rules.NewRuleset()
+
 	lexingRules := []rules.LexingRuleInterface[task_rules.LexingTokenType]{
-		//&task_rules.MulKeywordRuleLex{},
-		//&task_rules.DontKeywordRuleLex{},
-		//&task_rules.DoKeywordRuleLex{},
-		//&task_rules.OpenParenthesisRuleLex{},
-		//&task_rules.CloseParenthesisRuleLex{},
-		//&task_rules.CommaRuleLex{},
-		//&task_rules.DigitRuleLex{},
-		&task_rules.InvalidTokenLex{},
+		lexerRuleFactory.GetMulKeywordRuleLex(),
+		lexerRuleFactory.GetDontKeywordRuleLex(),
+		lexerRuleFactory.GetDoKeywordRuleLex(),
+		lexerRuleFactory.GetOpenParenthesisRuleLex(),
+		lexerRuleFactory.GetCloseParenthesisRuleLex(),
+		lexerRuleFactory.GetCommaRuleLex(),
+		lexerRuleFactory.GetDigitRuleLex(),
+		lexerRuleFactory.GetInvalidTokenRuleLex(),
 	}
 
 	parsingRules := []rules2.ParsingRuleInterface[task_rules.LexingTokenType]{
@@ -36,28 +37,24 @@ func (g *GetInputDataPipe) Process(input common.PipelineContext[task_rules.Lexin
 	}
 
 	fileHandler := utilities.NewFileHandler[task_rules.LexingTokenType](input.Reader, lexingRules, parsingRules)
-	tokens, err := fileHandler.Lex()
-
-	if err != nil {
-		log.Fatalf("error lexing input: %v", err)
-	}
-
-	for i, token := range tokens {
-		fmt.Println(fmt.Sprintf("Token (%d)... Type: %d, value: '%s'", i+1, token.Type, token.Value))
-	}
-
-	if string(tokens[len(tokens)-1].Value) != "xmul(2,4)&mul[3,7]!^don't()_mul(5,5)+mul(32,64](mul(11,8)undo()?mul(8,5))" {
-		fmt.Println("Test failed")
-	}
-
-	//tree, err := fileHandler.Parse()
+	//tokens, err := fileHandler.Lex()
 
 	//if err != nil {
-	//	log.Fatalf("error parsing input: %v", err)
+	//	log.Fatalf("error lexing input: %v", err)
 	//}
+
+	//for i, token := range tokens {
+	//	fmt.Println(fmt.Sprintf("Token (%d)... Type: %d, value: '%s'", i+1, token.Type, token.Value))
+	//}
+
+	tree, err := fileHandler.Parse()
+
+	if err != nil {
+		log.Fatalf("error parsing input: %v", err)
+	}
 
 	//tree.Print(2)
 
-	//input.ParseTree = tree
+	input.ParseTree = tree
 	return input
 }

@@ -23,7 +23,7 @@ func NewScanner(reader io.Reader) *Scanner {
 
 	return &Scanner{
 		runes:        runes,
-		currentIndex: -1,
+		currentIndex: 0,
 	}
 }
 
@@ -62,5 +62,14 @@ func (s *Scanner) Pushback(n int) error {
 
 // Reset resets the scanner's index to the beginning of the input stream.
 func (s *Scanner) Reset() {
-	s.currentIndex = -1
+	s.currentIndex = 0
+}
+
+// Current returns the current rune.
+func (s *Scanner) Current() rune {
+	if s.currentIndex >= len(s.runes) {
+		panic("Lexer index out of range") // Obviously, this should never happen.
+	}
+
+	return s.runes[s.currentIndex]
 }
