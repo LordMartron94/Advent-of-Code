@@ -16,6 +16,11 @@ type ParseTree[T comparable] struct {
 // Print prints the parse tree with indentation
 func (pt *ParseTree[T]) Print(indent int) {
 	fmt.Println(strings.Repeat("  ", indent) + pt.Symbol)
+
+	if pt.Symbol == "ignore" {
+		return
+	}
+
 	if pt.Token != nil {
 		fmt.Println(strings.Repeat("  ", indent+1) + "Token: " + fmt.Sprintf("%s (%v)", pt.Token.Value, pt.Token.Type))
 	}
