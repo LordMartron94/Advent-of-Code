@@ -42,12 +42,12 @@ func ChangeWorkingDirectoryToSpecificTask(year int, day int) {
 	}
 }
 
-func NewFileHandler[T comparable](reader io.Reader, lexingRules []rules.LexingRuleInterface[T], parsingRules []rules2.ParsingRuleInterface[T]) *FileHandler[T] {
+func NewFileHandler[T comparable](reader io.Reader, lexingRules []rules.LexingRuleInterface[T], parsingRules []rules2.ParsingRuleInterface[T], ignoreTokenType T) *FileHandler[T] {
 	lexer := lexing.NewLexer[T](reader, lexingRules)
 
 	return &FileHandler[T]{
 		lexer:  lexer,
-		parser: parsing.NewParser[T](lexer, parsingRules),
+		parser: parsing.NewParser[T](lexer, parsingRules, ignoreTokenType),
 	}
 }
 

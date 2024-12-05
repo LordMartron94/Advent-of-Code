@@ -24,5 +24,5 @@ func (rs *Ruleset[T]) GetMatchingRule(input []*shared.Token[T], currentIndex int
 		}
 	}
 
-	return nil, fmt.Errorf("no matching rule found for input '%c'\n", input)
+	return nil, fmt.Errorf("no matching rule found for input '%c'\n", input[currentIndex].Value)
 }

@@ -13,16 +13,18 @@ import (
 
 // Parser is a struct to represent a parser
 type Parser[T comparable] struct {
-	lexer    lexing.LexerInterface[T]
-	ruleSet  *rules.Ruleset[T]
-	stateMap map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]]
+	lexer           lexing.LexerInterface[T]
+	ruleSet         *rules.Ruleset[T]
+	stateMap        map[rules.ParsingRuleInterface[T]]fsm.State[ParsingStateArgs[T]]
+	ignoreTokenType T
 }
 
 // NewParser creates a new parser from the given input
-func NewParser[T comparable](lexer lexing.LexerInterface[T], parsingRules []rules.ParsingRuleInterface[T]) *Parser[T] {
+func NewParser[T comparable](lexer lexing.LexerInterface[T], parsingRules []rules.ParsingRuleInterface[T], ignoreTokenType T) *Parser[T] {
 	parser := &Parser[T]{
-		lexer:   lexer,
-		ruleSet: rules.NewRuleset[T](parsingRules),
+		lexer:           lexer,
+		ruleSet:         rules.NewRuleset[T](parsingRules),
+		ignoreTokenType: ignoreTokenType,
 	}
 
 	stateMap, err := parser.generateFSM()
@@ -56,6 +58,23 @@ func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 	// Reset lexer to be sure it works
 	p.lexer.Reset()
 	tokens, err := p.lexer.GetTokens()
+	newTokens := make([]*shared.Token[T], 0)
+
+	ogNum := len(tokens)
+	fmt.Println("Num Tokens: ", ogNum)
+
+	// Remove Ignored Tokens from the tokens
+	for _, token := range tokens {
+		if token.Type != p.ignoreTokenType {
+			newTokens = append(newTokens, token)
+		}
+	}
+
+	tokens = newTokens
+
+	fmt.Println("Num Tokens after ignoring: ", len(tokens))
+	fmt.Println("Num of Ignored Tokens: ", ogNum-len(tokens))
+	fmt.Println("-------------")
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tokens: %w", err)

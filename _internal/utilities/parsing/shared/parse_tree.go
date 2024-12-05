@@ -17,13 +17,10 @@ type ParseTree[T comparable] struct {
 func (pt *ParseTree[T]) Print(indent int) {
 	fmt.Println(strings.Repeat("  ", indent) + pt.Symbol)
 
-	if pt.Symbol == "ignore" {
-		return
-	}
-
 	if pt.Token != nil {
 		fmt.Println(strings.Repeat("  ", indent+1) + "Token: " + fmt.Sprintf("%s (%v)", pt.Token.Value, pt.Token.Type))
 	}
+
 	for _, child := range pt.Children {
 		child.Print(indent + 1)
 	}

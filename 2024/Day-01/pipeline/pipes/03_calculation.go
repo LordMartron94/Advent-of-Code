@@ -2,6 +2,7 @@ package pipes
 
 import (
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/common"
+	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/task_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/common_calculations"
 )
 
@@ -39,7 +40,7 @@ func constructAppearanceMap(xSlice, ySlice []int) map[int]int {
 	return appearances
 }
 
-func (c *CalculationPipe) Process(input common.PipelineContext) common.PipelineContext {
+func (c *CalculationPipe) Process(input common.PipelineContext[task_rules.LexingTokenType]) common.PipelineContext[task_rules.LexingTokenType] {
 	totalDistance := 0
 	common_calculations.SumInts(&input.Distances, &totalDistance)
 

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/common"
+	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/task_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/common_calculations"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming"
@@ -25,17 +26,17 @@ func calculateDistance(num1, num2 int) int {
 	return d
 }
 
-func (t *TransformSlicesPipe) Process(input common.PipelineContext) common.PipelineContext {
+func (t *TransformSlicesPipe) Process(input common.PipelineContext[task_rules.LexingTokenType]) common.PipelineContext[task_rules.LexingTokenType] {
 	num1Slice := make([]int, 0)
 	num2Slice := make([]int, 0)
 	distances := make([]int, 0)
 
-	callbackFinder := func(node *shared.ParseTree) (shared2.TransformCallback, int) {
+	callbackFinder := func(node *shared.ParseTree[task_rules.LexingTokenType]) (shared2.TransformCallback[task_rules.LexingTokenType], int) {
 		switch node.Symbol {
-		case "first_number":
-			return common_transformers.AppendTokenValueToSliceSorted(&num1Slice, strconv.Atoi, sort.Ints), 0
-		case "second_number":
-			return common_transformers.AppendTokenValueToSliceSorted(&num2Slice, strconv.Atoi, sort.Ints), 0
+		case "left_number":
+			return common_transformers.AppendTokenValueToSliceSorted[int, task_rules.LexingTokenType](&num1Slice, strconv.Atoi, sort.Ints), 0
+		case "right_number":
+			return common_transformers.AppendTokenValueToSliceSorted[int, task_rules.LexingTokenType](&num2Slice, strconv.Atoi, sort.Ints), 0
 		}
 		return nil, 0
 	}
