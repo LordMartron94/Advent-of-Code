@@ -29,10 +29,6 @@ func NewLexer[T comparable](reader io.Reader, lexingRules []rules.LexingRuleInte
 func (l *Lexer[T]) GetToken() *shared.Token[T] {
 	matchingRule, err := l.getMatchingRule()
 	if err != nil {
-		if err == io.EOF {
-			return nil
-		}
-
 		panic(err)
 	}
 
@@ -47,9 +43,6 @@ func (l *Lexer[T]) GetToken() *shared.Token[T] {
 func (l *Lexer[T]) getMatchingRule() (rules.LexingRuleInterface[T], error) {
 	matchingRule, err := l.ruleSet.GetMatchingRule(l.scanner)
 	if err != nil {
-		if err == io.EOF {
-			return nil, io.EOF
-		}
 		return nil, err
 	}
 	return matchingRule, nil

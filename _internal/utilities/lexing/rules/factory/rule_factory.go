@@ -33,6 +33,17 @@ func (r *RuleFactory[T]) NewInvalidTokenLexingRule(unknownToken T) rules.LexingR
 	}
 }
 
+func (r *RuleFactory[T]) NewIgnoreTokenLexingRule(symbol string, associatedToken T, matchFunc func(scanning.PeekInterface) bool) rules.LexingRuleInterface[T] {
+	return &baseLexingRule[T]{
+		SymbolString:    symbol,
+		MatchFunc:       matchFunc,
+		AssociatedToken: associatedToken,
+		GetContentFunc: func(scanner scanning.PeekInterface) []rune {
+			return []rune("IGNORE")
+		},
+	}
+}
+
 // NewKeywordLexingRule creates a new lexing rule with the given keyword, associated token, and symbol.
 func (r *RuleFactory[T]) NewKeywordLexingRule(keyword string, associatedToken T, symbol string) rules.LexingRuleInterface[T] {
 	return &baseLexingRule[T]{

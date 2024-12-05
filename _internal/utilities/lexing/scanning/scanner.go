@@ -21,6 +21,10 @@ func NewScanner(reader io.Reader) *Scanner {
 		panic(err)
 	}
 
+	runes = append(runes, '\n') // Add newline character to the end of the runes slice...
+	// Necessary to ensure the last character is processed correctly.
+	// No idea why this is, but it works. Solve later.
+
 	return &Scanner{
 		runes:        runes,
 		currentIndex: 0,
