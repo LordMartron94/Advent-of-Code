@@ -10,6 +10,7 @@ import (
 type BaseParsingRule[T comparable] struct {
 	SymbolString string
 
+	isShell        bool // IsShell indicates that the top element is not a token in itself
 	matchFunc      func(tokens []*shared.Token[T], currentIndex int) (bool, string)
 	getContentFunc func(tokens []*shared.Token[T], currentIndex int) *shared2.ParseTree[T]
 }
@@ -27,5 +28,9 @@ func (b *BaseParsingRule[T]) Match(tokens []*shared.Token[T], currentIndex int) 
 
 	tree := b.getContentFunc(tokens, currentIndex)
 
-	return tree, nil, len(tree.Children)
+	if b.isShell {
+		return tree, nil, len(tree.Children)
+	}
+
+	return tree, nil, len(tree.Children) + 1
 }

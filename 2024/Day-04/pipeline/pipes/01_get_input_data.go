@@ -17,6 +17,7 @@ type GetInputDataPipe struct {
 // Process method to process the input. Input is the filepath.
 func (g *GetInputDataPipe) Process(input common.PipelineContext[task_rules.LexingTokenType]) common.PipelineContext[task_rules.LexingTokenType] {
 	lexerRuleFactory := task_rules.NewRuleset()
+	parsingRuleFactory := task_rules.NewParsingRuleFactory()
 
 	lexingRules := []rules.LexingRuleInterface[task_rules.LexingTokenType]{
 		lexerRuleFactory.GetXCharRuleLex(),
@@ -28,12 +29,12 @@ func (g *GetInputDataPipe) Process(input common.PipelineContext[task_rules.Lexin
 	}
 
 	parsingRules := []rules2.ParsingRuleInterface[task_rules.LexingTokenType]{
-		&task_rules.IgnoreTokenParserRule{},
-		&task_rules.HorizontalLineParserRule{},
-		&task_rules.InvalidTokenParserRule{},
+		parsingRuleFactory.GetHorizontalLineParserRule(),
+		parsingRuleFactory.GetNewLineTokenParserRule(),
+		parsingRuleFactory.GetInvalidTokenRule(),
 	}
 
-	fileHandler := utilities.NewFileHandler[task_rules.LexingTokenType](input.Reader, lexingRules, parsingRules)
+	fileHandler := utilities.NewFileHandler[task_rules.LexingTokenType](input.Reader, lexingRules, parsingRules, task_rules.IgnoreToken)
 	//tokens, err := fileHandler.Lex()
 	////
 	//if err != nil {
@@ -59,6 +60,8 @@ func (g *GetInputDataPipe) Process(input common.PipelineContext[task_rules.Lexin
 	}
 
 	//tree.Print(2)
+
+	//os.Exit(0)
 
 	input.ParseTree = tree
 	return input

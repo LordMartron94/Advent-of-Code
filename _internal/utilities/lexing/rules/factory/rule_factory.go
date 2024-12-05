@@ -21,8 +21,8 @@ func (r *RuleFactory[T]) NewLexingRule(symbol string, isMatchFunc func(scanning.
 	return rule
 }
 
-// NewInvalidTokenLexingRule creates a new default lexing rule with the given associated token.
-func (r *RuleFactory[T]) NewInvalidTokenLexingRule(unknownToken T) rules.LexingRuleInterface[T] {
+// NewMatchAnyTokenRule creates a new default lexing rule with the given associated token.
+func (r *RuleFactory[T]) NewMatchAnyTokenRule(unknownToken T) rules.LexingRuleInterface[T] {
 	return &baseLexingRule[T]{
 		SymbolString:    "UnknownTokenRuleLexer",
 		MatchFunc:       func(scanning.PeekInterface) bool { return true },

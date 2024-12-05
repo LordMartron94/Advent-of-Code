@@ -29,7 +29,7 @@ func NewRuleset() *Ruleset {
 }
 
 func (r *Ruleset) GetInvalidTokenRuleLex() rules.LexingRuleInterface[LexingTokenType] {
-	return r.factory.NewInvalidTokenLexingRule(IgnoreToken)
+	return r.factory.NewMatchAnyTokenRule(IgnoreToken)
 }
 
 func (r *Ruleset) GetXCharRuleLex() rules.LexingRuleInterface[LexingTokenType] {
@@ -52,7 +52,7 @@ func (r *Ruleset) GetNewLineRuleLexer() rules.LexingRuleInterface[LexingTokenTyp
 	return r.factory.NewLexingRule("NewLineRuleLexer", func(peekInterface scanning.PeekInterface) bool {
 		currentRune := peekInterface.Current()
 
-		return currentRune == '\n' || currentRune == '\r' || currentRune == ' '
+		return currentRune == '\n'
 	}, NewLineToken, func(scanner scanning.PeekInterface) []rune {
 		runes := make([]rune, 0)
 		runes = append(runes, scanner.Current())

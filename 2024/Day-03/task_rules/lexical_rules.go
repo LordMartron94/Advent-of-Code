@@ -29,7 +29,7 @@ func NewRuleset() *Ruleset {
 }
 
 func (r *Ruleset) GetInvalidTokenRuleLex() rules.LexingRuleInterface[LexingTokenType] {
-	return r.factory.NewInvalidTokenLexingRule(InvalidToken)
+	return r.factory.NewMatchAnyTokenRule(InvalidToken)
 }
 
 func (r *Ruleset) GetDigitRuleLex() rules.LexingRuleInterface[LexingTokenType] {
