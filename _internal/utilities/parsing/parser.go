@@ -60,7 +60,8 @@ func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 	tokens, err := p.lexer.GetTokens()
 	newTokens := make([]*shared.Token[T], 0)
 
-	fmt.Println("Num Tokens: ", len(tokens))
+	ogNum := len(tokens)
+	fmt.Println("Num Tokens: ", ogNum)
 
 	// Remove Ignored Tokens from the tokens
 	for _, token := range tokens {
@@ -72,7 +73,7 @@ func (p *Parser[T]) Parse() (*shared2.ParseTree[T], error) {
 	tokens = newTokens
 
 	fmt.Println("Num Tokens after ignoring: ", len(tokens))
-	fmt.Println("Num of Ignored Tokens: ", len(tokens)-len(newTokens))
+	fmt.Println("Num of Ignored Tokens: ", ogNum-len(tokens))
 	fmt.Println("-------------")
 
 	if err != nil {

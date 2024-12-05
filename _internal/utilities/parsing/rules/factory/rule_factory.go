@@ -29,12 +29,21 @@ func (p *ParsingRuleFactory[T]) NewParsingRule(
 	symbol string,
 	matchFunc func([]*shared.Token[T], int) (bool, string),
 	getContentFunc func([]*shared.Token[T], int) *shared2.ParseTree[T],
-	isShell bool) rules.ParsingRuleInterface[T] {
+	isShell bool,
+	consumeExtra ...int) rules.ParsingRuleInterface[T] {
+	if len(consumeExtra) < 1 {
+		consumeExtra = append(consumeExtra, 0)
+	}
+	if len(consumeExtra) > 1 {
+		panic("consumeExtra must have a single element")
+	}
+
 	return &BaseParsingRule[T]{
 		SymbolString:   symbol,
 		matchFunc:      matchFunc,
 		getContentFunc: getContentFunc,
 		isShell:        isShell,
+		consumeExtra:   consumeExtra[0],
 	}
 }
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/common"
 	pipes2 "github.com/LordMartron94/Advent-of-Code/2024/Day-01/pipeline/pipes"
+	"github.com/LordMartron94/Advent-of-Code/2024/Day-01/task_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
 	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
@@ -45,13 +46,13 @@ func main() {
 		}
 	}(file)
 
-	pipes := []pipeline2.Pipe[common.PipelineContext]{
+	pipes := []pipeline2.Pipe[common.PipelineContext[task_rules.LexingTokenType]]{
 		&pipes2.GetInputDataPipe{},
 		&pipes2.TransformSlicesPipe{},
 		&pipes2.CalculationPipe{},
 	}
 
-	startingContext := common.NewPipelineContext(file)
+	startingContext := common.NewPipelineContext[task_rules.LexingTokenType](file)
 
 	pipeline := pipeline2.NewPipeline(pipes)
 	finalData := pipeline.Process(*startingContext)
