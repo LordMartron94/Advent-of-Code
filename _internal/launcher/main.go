@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -108,31 +110,53 @@ func getDayDirs(yearDir string) ([]string, error) {
 	return dayDirs, nil
 }
 
-func getTasksForYear(yearDir string) []string {
+type EntryPoint struct {
+	Day   int
+	Path  string
+	Label string
+}
+
+func getTasksForYear(yearDir string) []EntryPoint {
 	dayDirs, err := getDayDirs(yearDir)
 
-	entryPoints := make([]string, 0)
+	entryPointsList := make([]EntryPoint, 0)
 
 	if err != nil {
 		log.Printf("Error reading day directories for year: %s\n", yearDir)
-		return entryPoints
+		return entryPointsList
 	}
 
+	yearNumber := strings.TrimPrefix(yearDir, "./")
+	year, _ := strconv.Atoi(yearNumber)
+
 	for _, dayDir := range dayDirs {
-		entryPoint, err := getEntryPointForDay(filepath.Join(yearDir, dayDir))
+		// Get day number from directory name
+		dayNum := strings.TrimPrefix(dayDir, "Day-")
+		day, _ := strconv.Atoi(dayNum)
+
+		entryPoint, err, label := getEntryPointForDay(filepath.Join(yearDir, dayDir), year, day)
 
 		if err != nil {
 			log.Printf("Error reading entry point for day: %s\n", dayDir)
 			continue
 		}
 
-		entryPoints = append(entryPoints, entryPoint)
+		// Append to the slice
+		entryPointsList = append(entryPointsList, EntryPoint{
+			Day:   day,
+			Path:  entryPoint,
+			Label: label,
+		})
 	}
 
-	return entryPoints
+	sort.Slice(entryPointsList, func(i, j int) bool {
+		return entryPointsList[i].Day < entryPointsList[j].Day
+	})
+
+	return entryPointsList
 }
 
-func getEntryPointForDay(dayDir string) (string, error) {
+func getEntryPointForDay(dayDir string, year int, day int) (string, error, string) {
 	// Find main.go file in the day directory
 	mainGoFilePath := filepath.Join(dayDir, "main.go")
 	resolvedMainGoFilePath, err := filepath.Abs(mainGoFilePath)
@@ -140,11 +164,11 @@ func getEntryPointForDay(dayDir string) (string, error) {
 	if err != nil {
 		log.Printf("Error resolving main.go file path: %s\n", dayDir)
 		log.Println(err)
-		return "", err
+		return "", err, ""
 	}
 
 	if _, err := os.Stat(resolvedMainGoFilePath); err == nil {
-		return resolvedMainGoFilePath, nil
+		return resolvedMainGoFilePath, nil, fmt.Sprintf("Year '%d' - Day '%d'", year, day)
 	} else if os.IsNotExist(err) {
 		fmt.Printf("No main.go file found in day directory: %s\n", dayDir)
 	} else {
@@ -152,12 +176,12 @@ func getEntryPointForDay(dayDir string) (string, error) {
 		log.Println(err)
 	}
 
-	return "", nil
+	return "", nil, ""
 }
 
-func processTasks(tasks []string) {
+func processTasks(tasks []EntryPoint) {
 	for i, task := range tasks {
-		fmt.Printf("Task %d: %s\n", i+1, task)
+		fmt.Printf("Task %d): %s\n", i+1, task.Label)
 	}
 
 	fmt.Println("------------------------------")
@@ -166,11 +190,24 @@ func processTasks(tasks []string) {
 
 	// Let user select a task to execute
 	var selectedTaskIndex int
-	fmt.Print("Enter the number of the task you want to execute (1-" + strconv.Itoa(len(tasks)) + "): ")
-	_, err := fmt.Scanf("%d", &selectedTaskIndex)
+	reader := bufio.NewReader(os.Stdin)
+	maxNum := strconv.Itoa(len(tasks))
+	fmt.Print("Enter the number of the task you want to execute (1-" + maxNum + ") [" + maxNum + "]: ")
+	input, err := reader.ReadString('\n')
 	if err != nil {
-		log.Println("Error reading task number")
+		log.Println("Error reading input:", err)
 		return
+	}
+
+	input = strings.TrimSpace(input) // Remove newline and potential leading/trailing spaces
+
+	selectedTaskIndex = len(tasks)
+	if input != "" {
+		selectedTaskIndex, err = strconv.Atoi(input)
+		if err != nil {
+			log.Println("Invalid input:", err)
+			return
+		}
 	}
 
 	if selectedTaskIndex < 1 || selectedTaskIndex > len(tasks) {
@@ -178,13 +215,14 @@ func processTasks(tasks []string) {
 		return
 	}
 
-	selectedTask := tasks[selectedTaskIndex-1]
-	cmd := exec.Command("go", "run", selectedTask)
+	selectedTaskExe := tasks[selectedTaskIndex-1].Path
+
+	cmd := exec.Command("go", "run", selectedTaskExe)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
 	if err != nil {
-		log.Printf("Error executing task: %s\n", selectedTask)
+		log.Printf("Error executing task: %s\n", selectedTaskExe)
 		log.Println(err)
 		return
 	}
@@ -198,10 +236,11 @@ func main() {
 		return
 	}
 
-	tasks := make([]string, 0)
+	tasks := make([]EntryPoint, 0)
 
 	for _, yearDir := range yearDirs {
-		tasks = append(tasks, getTasksForYear(yearDir)...)
+		tasksForYear := getTasksForYear(yearDir)
+		tasks = append(tasks, tasksForYear...)
 	}
 
 	processTasks(tasks)

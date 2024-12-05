@@ -170,7 +170,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	file, err := os.OpenFile("input.txt", os.O_RDONLY, 0644)
+	file, err := os.OpenFile("test.txt", os.O_RDONLY, 0644)
 	if err != nil {
 		fmt.Println("Error opening file:", err)
 		os.Exit(1)
@@ -182,6 +182,8 @@ func main() {
 			os.Exit(1)
 		}
 	}(file)
+
+	fmt.Println("Input file opened successfully")
 }
 `, year, day)
 

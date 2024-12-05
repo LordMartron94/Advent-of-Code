@@ -140,3 +140,48 @@ func (r *RuleFactory[T]) NewNumberLexingRule(associatedToken T, symbol string) r
 		},
 	}
 }
+
+func (r *RuleFactory[T]) NewWhitespaceLexingRule(tokenType T, symbol string) rules.LexingRuleInterface[T] {
+	vFunc := func(r rune) bool {
+		return r == '\t' || r == '\n' || r == '\r' || r == ' ' || r == '\f' || r == '\v'
+	}
+	mFunc := func(scanner scanning.PeekInterface) bool {
+		currentRune := scanner.Current()
+
+		if !vFunc(currentRune) {
+			return false
+		}
+
+		return true
+	}
+
+	return &baseLexingRule[T]{
+		SymbolString:    symbol,
+		MatchFunc:       mFunc,
+		AssociatedToken: tokenType,
+		GetContentFunc: func(scanner scanning.PeekInterface) []rune {
+			runes := make([]rune, 0)
+			runes = append(runes, scanner.Current())
+
+			peekIndex := 1
+			for {
+				pRunes, err := scanner.Peek(peekIndex)
+
+				if err != nil {
+					break
+				}
+
+				peekedRune := pRunes[len(pRunes)-1]
+
+				if vFunc(peekedRune) {
+					runes = append(runes, peekedRune)
+					peekIndex++
+				} else {
+					break
+				}
+			}
+
+			return runes
+		},
+	}
+}

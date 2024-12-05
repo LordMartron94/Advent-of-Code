@@ -16,7 +16,7 @@ func NewParsingRuleFactory() *ParsingRuleFactory {
 }
 
 func (p *ParsingRuleFactory) GetHorizontalLineParserRule() rules.ParsingRuleInterface[LexingTokenType] {
-	return p.factory.NewMatchUntilTokenWithFilterParsingRule("horizontal_line", []LexingTokenType{XCharToken, MCharToken, ACharToken, SCharToken}, "horizontal_line_element")
+	return p.factory.NewMatchUntilTokenWithFilterParsingRule("horizontal_line", []LexingTokenType{XCharToken, MCharToken, ACharToken, SCharToken}, []string{"horizontal_line_element", "horizontal_line_element", "horizontal_line_element", "horizontal_line_element"})
 }
 
 func (p *ParsingRuleFactory) GetNewLineTokenParserRule() rules.ParsingRuleInterface[LexingTokenType] {

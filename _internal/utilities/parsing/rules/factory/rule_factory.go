@@ -75,6 +75,10 @@ func (p *ParsingRuleFactory[T]) NewSequentialTokenParsingRule(symbol string, tar
 		}
 
 		for i := 0; i < len(targetTokenTypeSequence); i++ {
+			if index+i >= len(tokens) {
+				return false, fmt.Sprintf("not enough tokens to match sequence")
+			}
+
 			if tokens[index+i].Type != targetTokenTypeSequence[i] {
 				return false, fmt.Sprintf("expected %s token at position %d", targetTokenTypeSequence[i], i+1)
 			}
@@ -141,8 +145,21 @@ func (p *ParsingRuleFactory[T]) NewMatchUntilTokenParsingRule(symbol string, tar
 	}, true)
 }
 
+func sliceIndex[T comparable](s []T, e T) int {
+	for i, a := range s {
+		if a == e {
+			return i
+		}
+	}
+	return -1
+}
+
 // NewMatchUntilTokenWithFilterParsingRule returns a new ParsingRule instance that matches as long as tokens of the specified types are encountered.
-func (p *ParsingRuleFactory[T]) NewMatchUntilTokenWithFilterParsingRule(symbol string, possibleChildrenTypes []T, childSymbol string) rules.ParsingRuleInterface[T] {
+func (p *ParsingRuleFactory[T]) NewMatchUntilTokenWithFilterParsingRule(symbol string, possibleChildrenTypes []T, childSymbols []string) rules.ParsingRuleInterface[T] {
+	if len(possibleChildrenTypes) != len(childSymbols) {
+		panic("possibleChildrenTypes and childSymbols must have the same length")
+	}
+
 	return p.NewParsingRule(symbol, func(tokens []*shared.Token[T], index int) (bool, string) {
 		childCount := 0
 
@@ -163,9 +180,13 @@ func (p *ParsingRuleFactory[T]) NewMatchUntilTokenWithFilterParsingRule(symbol s
 		children := make([]*shared2.ParseTree[T], 0)
 
 		for i := index; i < len(tokens); i++ {
-			if !sliceContains(possibleChildrenTypes, tokens[i].Type) {
+			currentTokenType := tokens[i].Type
+
+			if !sliceContains(possibleChildrenTypes, currentTokenType) {
 				break
 			}
+
+			childSymbol := childSymbols[sliceIndex(possibleChildrenTypes, currentTokenType)]
 
 			children = append(children, &shared2.ParseTree[T]{
 				Symbol:   childSymbol,
