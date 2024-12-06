@@ -7,7 +7,7 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 )
 
-type baseLexingRule[T any] struct {
+type baseLexingRule[T comparable] struct {
 	buffer *bytes.Buffer
 
 	AssociatedToken T

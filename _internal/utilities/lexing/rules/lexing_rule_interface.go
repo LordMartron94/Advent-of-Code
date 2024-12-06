@@ -5,7 +5,7 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 )
 
-type LexingRuleInterface[T any] interface {
+type LexingRuleInterface[T comparable] interface {
 	// Symbol returns the lexical symbol this rule represents (e.g., "expression", "statement", "term").
 	Symbol() string
 

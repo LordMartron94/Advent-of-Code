@@ -6,11 +6,11 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/scanning"
 )
 
-type Ruleset[T any] struct {
+type Ruleset[T comparable] struct {
 	Rules []LexingRuleInterface[T]
 }
 
-func NewRuleset[T any](rules []LexingRuleInterface[T]) *Ruleset[T] {
+func NewRuleset[T comparable](rules []LexingRuleInterface[T]) *Ruleset[T] {
 	return &Ruleset[T]{Rules: rules}
 }
 

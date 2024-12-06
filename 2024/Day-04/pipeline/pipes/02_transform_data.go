@@ -5,6 +5,7 @@ import (
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-04/pipeline/common"
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-04/task_rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
 	shared3 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/parsing/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming"
@@ -40,7 +41,7 @@ func (t *TransformDataPipe) Process(input common.PipelineContext[task_rules.Lexi
 	//numOfHorizontalLines := len(horizontalLines)
 	//fmt.Println("Number of horizontal lines:", numOfHorizontalLines)
 
-	gHelper := transforming.NewGridHelper(horizontalLines)
+	gHelper := matrix.NewMatrixHelper(horizontalLines)
 
 	numOfHorizontalMatches := gHelper.FindHorizontalConsecutiveTokensNumber([]task_rules.LexingTokenType{
 		task_rules.XCharToken,

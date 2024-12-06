@@ -1,14 +1,21 @@
 package shared
 
-import "fmt"
+import (
+	"bytes"
+	"fmt"
+)
 
 // Token represents a lexical token
-type Token[T any] struct {
+type Token[T comparable] struct {
 	Type  T
 	Value []byte
 }
 
-func (t *Token[T]) String() string {
+func (t Token[T]) Equals(other Token[T]) bool {
+	return t.Type == other.Type && bytes.Equal(t.Value, other.Value)
+}
+
+func (t Token[T]) String() string {
 	return fmt.Sprintf("[(%v) - '%s']", t.Type, t.Value)
 }
 
