@@ -142,17 +142,21 @@ go 1.23
 
 	writeFile([]byte(goModContent), year, day, "go.mod")
 
-	goMainContent := fmt.Sprintf(`package main
+	rawContent := `package main
 
 import (
 	"fmt"
 	"os"
 
+	"github.com/LordMartron94/Advent-of-Code/${year}/Day-${day}/pipeline/common"
+	"github.com/LordMartron94/Advent-of-Code/${year}/Day-${day}/pipeline/pipes"
+	"github.com/LordMartron94/Advent-of-Code/${year}/Day-${day}/task_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities"
+	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
 
-const year = %d
-const day = %d
+const year = ${year}
+const day = ${day}
 
 func main() {
 	utilities.ChangeWorkingDirectoryToSpecificTask(year, day)
@@ -183,9 +187,25 @@ func main() {
 		}
 	}(file)
 
-	fmt.Println("Input file opened successfully")
+	pipesToRun := []pipeline2.Pipe[common.PipelineContext[task_rules.LexingTokenType]]{
+		&pipes.GetInputDataPipe{},
+	}
+
+	startingContext := common.NewPipelineContext[task_rules.LexingTokenType](file)
+	pipeline := pipeline2.NewPipeline(pipesToRun)
+	result := pipeline.Process(*startingContext)
+
+	fmt.Println(fmt.Sprintf("Final result (task 1): %d", result.Result))
 }
-`, year, day)
+`
+	dayPaddedString := strconv.Itoa(day)
+
+	if len(dayPaddedString) < 2 {
+		dayPaddedString = "0" + dayPaddedString
+	}
+
+	goMainContent := strings.Replace(rawContent, "${year}", strconv.Itoa(year), -1)
+	goMainContent = strings.Replace(goMainContent, "${day}", dayPaddedString, -1)
 
 	writeFile([]byte(goMainContent), year, day, "main.go")
 }
