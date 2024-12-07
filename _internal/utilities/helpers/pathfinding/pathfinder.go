@@ -2,20 +2,27 @@ package pathfinding
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
 )
 
-type Rule[T any] struct {
-	MatchFunc       func(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) bool
-	GetNewPosition  func(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) matrix.Position
-	GetNewDirection func(currentPosition matrix.Position, currentDirection Direction) Direction
+type OutOfBoundsError struct{}
+
+func (e *OutOfBoundsError) Error() string {
+	return "out of bounds"
 }
 
-type Ruleset[T any] struct {
+type PathfindingRuleInterface[T any] interface {
+	MatchFunc(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) (bool, error)
+	GetNewPosition(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) matrix.Position
+	GetNewDirection(currentPosition matrix.Position, currentDirection Direction) Direction
+}
+
+type PathfindingRuleset[T any] struct {
 	IsBasic bool // Set to true if the ruleset is simple (follow current direction until obstacle, if obstacle, do x)... Two rules.
-	Rules   []Rule[T]
+	Rules   []PathfindingRuleInterface[T]
 }
 
 type Direction struct {
@@ -23,7 +30,7 @@ type Direction struct {
 	deltaC int
 }
 
-func (d *Direction) Turn() Direction {
+func (d *Direction) TurnRight() Direction {
 	return Direction{deltaR: d.deltaC, deltaC: -d.deltaR}
 }
 
@@ -53,15 +60,17 @@ func (d DirectionExternal) ToDirection() Direction {
 
 type PathFinder[T any] struct {
 	matrixHelper    *matrix.MatrixHelper[T]
-	ruleSet         *Ruleset[T]
+	ruleSet         *PathfindingRuleset[T]
 	equalityChecker func(a, b T) bool
+	debugMode       bool
 }
 
-func NewPathFinder[T any](matrixToUse [][]T, equalityChecker func(a, b T) bool, ruleset Ruleset[T]) *PathFinder[T] {
+func NewPathFinder[T any](matrixToUse [][]T, equalityChecker func(a, b T) bool, ruleset PathfindingRuleset[T], debug bool) *PathFinder[T] {
 	return &PathFinder[T]{
 		matrixHelper:    matrix.NewMatrixHelper(matrixToUse, equalityChecker),
 		ruleSet:         &ruleset,
 		equalityChecker: equalityChecker,
+		debugMode:       debug,
 	}
 }
 
@@ -76,10 +85,16 @@ func (pf *PathFinder[T]) getStartingPosition(startItem T) (matrix.Position, erro
 	return *foundPos, nil
 }
 
-func (pf *PathFinder[T]) getRule(currentPosition matrix.Position, currentDirection Direction) (*Rule[T], error) {
+func (pf *PathFinder[T]) getRule(currentPosition matrix.Position, currentDirection Direction) (PathfindingRuleInterface[T], error) {
 	for _, rule := range pf.ruleSet.Rules {
-		if rule.MatchFunc(currentPosition, currentDirection, *pf) {
-			return &rule, nil
+		match, err := rule.MatchFunc(currentPosition, currentDirection, *pf)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if match {
+			return rule, nil
 		}
 	}
 
@@ -104,17 +119,24 @@ func (pf *PathFinder[T]) followPath(
 
 		path[position] = append(path[position], direction)
 
+		// getRule has out of bounds check built in.
 		rule, err := pf.getRule(position, direction)
 
 		if err != nil {
+			var err *OutOfBoundsError
+			if errors.As(err, &err) {
+				return nil
+			}
+
 			return err
 		}
 
 		newDirection := rule.GetNewDirection(position, direction)
 		newPosition := rule.GetNewPosition(position, direction, *pf)
 
-		if pf.OutOfBounds(newPosition) {
-			return nil
+		if pf.debugMode {
+			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", position.RowIndex+1, position.ColIndex+1, direction.deltaR, direction.deltaC))
+			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.deltaR, newDirection.deltaC))
 		}
 
 		if err != nil {
@@ -160,6 +182,7 @@ func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem
 		return 0, err
 	}
 	visitedNodeCount := 0
+
 	path := make(map[matrix.Position][]Direction)
 	err = pf.followPath(
 		startPos,
@@ -242,7 +265,7 @@ func (pf *PathFinder[T]) GetNumberOfLoopingMatricesForGeneratedVariations(startI
 	return loopingMatrixCount, nil
 }
 
-func (pf *PathFinder[T]) GetPositionInDirectory(position matrix.Position, direction Direction, n int) matrix.Position {
+func (pf *PathFinder[T]) GetPositionInDirection(position matrix.Position, direction Direction, n int) matrix.Position {
 	newPos := position
 	newPos.RowIndex += direction.deltaR * n
 	newPos.ColIndex += direction.deltaC * n
@@ -260,4 +283,8 @@ func (pf *PathFinder[T]) OutOfBounds(pos matrix.Position) bool {
 
 func (pf *PathFinder[T]) GetItemAtPosition(pos matrix.Position) T {
 	return pf.matrixHelper.GetAtPosition(pos.RowIndex, pos.ColIndex)
+}
+
+func (pf *PathFinder[T]) EqualityCheck(a, b T) bool {
+	return pf.equalityChecker(a, b)
 }
