@@ -1,0 +1,4 @@
+[submodule "benchmark_tool"]
+	path = _internal/benchmarking
+	url = https://github.com/LordMartron94/CLI-Bench
+	branch = main
