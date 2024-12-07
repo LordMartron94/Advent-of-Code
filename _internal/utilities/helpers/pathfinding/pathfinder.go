@@ -6,33 +6,10 @@ import (
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules/factory"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 )
-
-type OutOfBoundsError struct{}
-
-func (e *OutOfBoundsError) Error() string {
-	return "out of bounds"
-}
-
-type PathfindingRuleInterface[T any] interface {
-	MatchFunc(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) (bool, error)
-	GetNewPosition(currentPosition matrix.Position, currentDirection Direction, finder PathFinder[T]) matrix.Position
-	GetNewDirection(currentPosition matrix.Position, currentDirection Direction) Direction
-}
-
-type PathfindingRuleset[T any] struct {
-	IsBasic bool // Set to true if the ruleset is simple (follow current direction until obstacle, if obstacle, do x)... Two rules.
-	Rules   []PathfindingRuleInterface[T]
-}
-
-type Direction struct {
-	deltaR int
-	deltaC int
-}
-
-func (d *Direction) TurnRight() Direction {
-	return Direction{deltaR: d.deltaC, deltaC: -d.deltaR}
-}
 
 type DirectionExternal int
 
@@ -43,32 +20,34 @@ const (
 	Up
 )
 
-func (d DirectionExternal) ToDirection() Direction {
+func (d DirectionExternal) ToDirection() shared.Direction {
 	switch d {
 	case Down:
-		return Direction{deltaR: 1, deltaC: 0}
+		return shared.Direction{DeltaR: 1, DeltaC: 0}
 	case Left:
-		return Direction{deltaR: 0, deltaC: -1}
+		return shared.Direction{DeltaR: 0, DeltaC: -1}
 	case Right:
-		return Direction{deltaR: 0, deltaC: 1}
+		return shared.Direction{DeltaR: 0, DeltaC: 1}
 	case Up:
-		return Direction{deltaR: -1, deltaC: 0}
+		return shared.Direction{DeltaR: -1, DeltaC: 0}
 	default:
-		return Direction{}
+		return shared.Direction{}
 	}
 }
 
 type PathFinder[T any] struct {
 	matrixHelper    *matrix.MatrixHelper[T]
-	ruleSet         *PathfindingRuleset[T]
+	ruleSet         *rules.PathfindingRuleset[T]
 	equalityChecker func(a, b T) bool
 	debugMode       bool
 }
 
-func NewPathFinder[T any](matrixToUse [][]T, equalityChecker func(a, b T) bool, ruleset PathfindingRuleset[T], debug bool) *PathFinder[T] {
+func NewPathFinder[T any](matrixToUse [][]T, equalityChecker func(a, b T) bool, rulesToUse []factory.PathfindingRuleInterface[T], basicRules, debug bool) *PathFinder[T] {
+	ruleset := rules.NewPathfindingRuleset(rulesToUse, basicRules)
+
 	return &PathFinder[T]{
 		matrixHelper:    matrix.NewMatrixHelper(matrixToUse, equalityChecker),
-		ruleSet:         &ruleset,
+		ruleSet:         ruleset,
 		equalityChecker: equalityChecker,
 		debugMode:       debug,
 	}
@@ -85,27 +64,11 @@ func (pf *PathFinder[T]) getStartingPosition(startItem T) (matrix.Position, erro
 	return *foundPos, nil
 }
 
-func (pf *PathFinder[T]) getRule(currentPosition matrix.Position, currentDirection Direction) (PathfindingRuleInterface[T], error) {
-	for _, rule := range pf.ruleSet.Rules {
-		match, err := rule.MatchFunc(currentPosition, currentDirection, *pf)
-
-		if err != nil {
-			return nil, err
-		}
-
-		if match {
-			return rule, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no matching rule found")
-}
-
 type FollowPathContext struct {
 	Position                   matrix.Position
-	Direction                  Direction
+	Direction                  shared.Direction
 	Path                       *[]matrix.Position
-	Directions                 *[][]Direction
+	Directions                 *[][]shared.Direction
 	currentPathIndex           int
 	estimatedDirectionCapacity int
 	numOfDirectionBatches      int
@@ -115,7 +78,7 @@ func (pf *PathFinder[T]) appendToPath(fpCtx *FollowPathContext) {
 	// We only need to initialize the directions slice if we are at the cap and need to insert a new one.
 	if fpCtx.currentPathIndex == len(*fpCtx.Directions) {
 		for range fpCtx.numOfDirectionBatches {
-			*fpCtx.Directions = append(*fpCtx.Directions, make([]Direction, 0, fpCtx.estimatedDirectionCapacity))
+			*fpCtx.Directions = append(*fpCtx.Directions, make([]shared.Direction, 0, fpCtx.estimatedDirectionCapacity))
 		}
 	}
 
@@ -146,10 +109,10 @@ func (pf *PathFinder[T]) followPath(
 		pf.appendToPath(fpCtx)
 
 		// getRule has out of bounds check built in.
-		rule, err := pf.getRule(fpCtx.Position, fpCtx.Direction)
+		rule, err := pf.ruleSet.GetRule(fpCtx.Position, fpCtx.Direction, pf)
 
 		if err != nil {
-			var err *OutOfBoundsError
+			var err *shared.OutOfBoundsError
 			if errors.As(err, &err) {
 				return nil
 			}
@@ -158,11 +121,11 @@ func (pf *PathFinder[T]) followPath(
 		}
 
 		newDirection := rule.GetNewDirection(fpCtx.Position, fpCtx.Direction)
-		newPosition := rule.GetNewPosition(fpCtx.Position, fpCtx.Direction, *pf)
+		newPosition := rule.GetNewPosition(fpCtx.Position, fpCtx.Direction, pf)
 
 		if pf.debugMode {
-			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", fpCtx.Position.RowIndex+1, fpCtx.Position.ColIndex+1, fpCtx.Direction.deltaR, fpCtx.Direction.deltaC))
-			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.deltaR, newDirection.deltaC))
+			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", fpCtx.Position.RowIndex+1, fpCtx.Position.ColIndex+1, fpCtx.Direction.DeltaR, fpCtx.Direction.DeltaC))
+			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.DeltaR, newDirection.DeltaC))
 		}
 
 		fpCtx.Position = newPosition
@@ -184,7 +147,7 @@ func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDire
 	}
 
 	path := make([]matrix.Position, 0, 300)
-	directions := make([][]Direction, 0, 300)
+	directions := make([][]shared.Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
@@ -216,7 +179,7 @@ func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem
 	visitedNodeCount := 0
 
 	path := make([]matrix.Position, 0, 300)
-	directions := make([][]Direction, 0, 300)
+	directions := make([][]shared.Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
@@ -251,7 +214,7 @@ func (pf *PathFinder[T]) SetMatrix(matrix [][]T) {
 }
 
 // DoesMatrixLoop checks if the matrix contains a loop with the ruleset.
-func (pf *PathFinder[T]) DoesMatrixLoop(startItem T, startDirection Direction) (bool, error) {
+func (pf *PathFinder[T]) DoesMatrixLoop(startItem T, startDirection shared.Direction) (bool, error) {
 	return pf.doesMatrixLoop(startItem, startDirection)
 }
 
@@ -304,10 +267,10 @@ func (pf *PathFinder[T]) GetNumberOfLoopingMatricesForGeneratedVariations(startI
 	return loopingMatrixCount, nil
 }
 
-func (pf *PathFinder[T]) GetPositionInDirection(position matrix.Position, direction Direction, n int) matrix.Position {
+func (pf *PathFinder[T]) GetPositionInDirection(position matrix.Position, direction shared.Direction, n int) matrix.Position {
 	newPos := position
-	newPos.RowIndex += direction.deltaR * n
-	newPos.ColIndex += direction.deltaC * n
+	newPos.RowIndex += direction.DeltaR * n
+	newPos.ColIndex += direction.DeltaC * n
 
 	return newPos
 }

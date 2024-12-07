@@ -6,10 +6,11 @@ import (
 	"slices"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 )
 
 // IsLoopSimple checks if the current position is part of a loop formed by the given path and current direction.
-func (pf *PathFinder[T]) IsLoopSimple(currentPosition matrix.Position, currentDirection Direction, path *[]matrix.Position, directions *[][]Direction) bool {
+func (pf *PathFinder[T]) IsLoopSimple(currentPosition matrix.Position, currentDirection shared.Direction, path *[]matrix.Position, directions *[][]shared.Direction) bool {
 	indexOfCurrentPosition := slices.IndexFunc(*path, func(p matrix.Position) bool {
 		return p == currentPosition
 	})
@@ -27,7 +28,7 @@ func (pf *PathFinder[T]) IsLoopSimple(currentPosition matrix.Position, currentDi
 	return false
 }
 
-func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection Direction) (bool, error) {
+func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection shared.Direction) (bool, error) {
 	if !pf.ruleSet.IsBasic {
 		return false, fmt.Errorf("loop detection only supported for basic rule sets")
 	}
@@ -42,7 +43,7 @@ func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection Direction) (
 
 	ctx, cancel := context.WithCancel(context.Background())
 	path := make([]matrix.Position, 0, 300)
-	directions := make([][]Direction, 0, 300)
+	directions := make([][]shared.Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
