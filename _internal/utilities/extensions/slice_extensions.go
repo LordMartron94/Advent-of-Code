@@ -64,11 +64,16 @@ func FindNumberOfMatchesInSliceV2[T any](slice []T, targets []T, reverseAllowed 
 
 // GetFormattedString returns a formatted string representation of the given slice.
 func GetFormattedString[T any](slice []T) string {
-	formattedString := "["
+	formattedString := ""
 	for _, item := range slice {
 		formattedString += fmt.Sprintf("%v, ", item)
 	}
-	formattedString = formattedString[:len(formattedString)-1] + "]"
+	if len(formattedString) > 0 {
+		formattedString = "[" + formattedString[:len(formattedString)-1] + "]"
+	} else {
+		formattedString = "[" + formattedString + "]"
+	}
+
 	return formattedString
 }
 

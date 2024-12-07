@@ -104,8 +104,24 @@ func (pf *PathFinder[T]) getRule(currentPosition matrix.Position, currentDirecti
 type FollowPathContext struct {
 	Position                   matrix.Position
 	Direction                  Direction
-	Path                       map[matrix.Position][]Direction
+	Path                       *[]matrix.Position
+	Directions                 *[][]Direction
+	currentPathIndex           int
 	estimatedDirectionCapacity int
+	numOfDirectionBatches      int
+}
+
+func (pf *PathFinder[T]) appendToPath(fpCtx *FollowPathContext) {
+	// We only need to initialize the directions slice if we are at the cap and need to insert a new one.
+	if fpCtx.currentPathIndex == len(*fpCtx.Directions) {
+		for range fpCtx.numOfDirectionBatches {
+			*fpCtx.Directions = append(*fpCtx.Directions, make([]Direction, 0, fpCtx.estimatedDirectionCapacity))
+		}
+	}
+
+	*fpCtx.Path = append(*fpCtx.Path, fpCtx.Position)
+	(*fpCtx.Directions)[fpCtx.currentPathIndex] = append((*fpCtx.Directions)[fpCtx.currentPathIndex], fpCtx.Direction)
+	fpCtx.currentPathIndex++
 }
 
 // followPath follows the path defined by the given ruleset.
@@ -115,6 +131,10 @@ func (pf *PathFinder[T]) followPath(
 	afterNewPositionCallbacks []func(ctx FollowPathContext),
 	ctx context.Context,
 ) error {
+	if fpCtx.numOfDirectionBatches < 1 {
+		panic("At least one direction batch is required")
+	}
+
 	select {
 	case <-ctx.Done():
 		return nil
@@ -123,13 +143,7 @@ func (pf *PathFinder[T]) followPath(
 			beforeNewPositionCallback(*fpCtx)
 		}
 
-		// Initialize the inner direction slice if the position has not been added.
-		if innerSlice, ok := fpCtx.Path[fpCtx.Position]; !ok {
-			innerSlice = make([]Direction, 0, fpCtx.estimatedDirectionCapacity)
-			fpCtx.Path[fpCtx.Position] = innerSlice
-		} else {
-			fpCtx.Path[fpCtx.Position] = append(innerSlice, fpCtx.Direction)
-		}
+		pf.appendToPath(fpCtx)
 
 		// getRule has out of bounds check built in.
 		rule, err := pf.getRule(fpCtx.Position, fpCtx.Direction)
@@ -151,16 +165,12 @@ func (pf *PathFinder[T]) followPath(
 			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.deltaR, newDirection.deltaC))
 		}
 
-		if err != nil {
-			return err
-		}
+		fpCtx.Position = newPosition
+		fpCtx.Direction = newDirection
 
 		for _, afterNewPositionCallback := range afterNewPositionCallbacks {
 			afterNewPositionCallback(*fpCtx)
 		}
-
-		fpCtx.Position = newPosition
-		fpCtx.Direction = newDirection
 
 		return pf.followPath(fpCtx, beforeNewPositionCallbacks, afterNewPositionCallbacks, ctx)
 	}
@@ -173,12 +183,16 @@ func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDire
 		return 0, err
 	}
 
-	path := make(map[matrix.Position][]Direction)
+	path := make([]matrix.Position, 0, 300)
+	directions := make([][]Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
 			Direction:                  startDirection.ToDirection(),
-			Path:                       path,
+			Path:                       &path,
+			Directions:                 &directions,
+			numOfDirectionBatches:      10,
+			currentPathIndex:           0,
 			estimatedDirectionCapacity: 3,
 		},
 		[]func(_ FollowPathContext){},
@@ -201,17 +215,21 @@ func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem
 	}
 	visitedNodeCount := 0
 
-	path := make(map[matrix.Position][]Direction)
+	path := make([]matrix.Position, 0, 300)
+	directions := make([][]Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
 			Direction:                  startDirection.ToDirection(),
-			Path:                       path,
+			Path:                       &path,
+			Directions:                 &directions,
+			numOfDirectionBatches:      10,
+			currentPathIndex:           0,
 			estimatedDirectionCapacity: 3,
 		},
 		[]func(pathContext FollowPathContext){
 			func(pathContext FollowPathContext) {
-				if !pf.Seen(pathContext.Position, path) {
+				if !pf.Seen(pathContext.Position, &path) {
 					visitedNodeCount++
 				}
 			},

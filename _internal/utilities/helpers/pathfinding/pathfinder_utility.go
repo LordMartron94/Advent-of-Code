@@ -9,8 +9,18 @@ import (
 )
 
 // IsLoopSimple checks if the current position is part of a loop formed by the given path and current direction.
-func (pf *PathFinder[T]) IsLoopSimple(currentPosition matrix.Position, currentDirection Direction, path map[matrix.Position][]Direction) bool {
-	if slices.Contains(path[currentPosition], currentDirection) {
+func (pf *PathFinder[T]) IsLoopSimple(currentPosition matrix.Position, currentDirection Direction, path *[]matrix.Position, directions *[][]Direction) bool {
+	indexOfCurrentPosition := slices.IndexFunc(*path, func(p matrix.Position) bool {
+		return p == currentPosition
+	})
+
+	if indexOfCurrentPosition == -1 {
+		return false
+	}
+
+	sliceToCheck := *directions
+
+	if slices.Contains(sliceToCheck[indexOfCurrentPosition], currentDirection) {
 		return true
 	}
 
@@ -31,18 +41,22 @@ func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection Direction) (
 	looping := false
 
 	ctx, cancel := context.WithCancel(context.Background())
-	path := make(map[matrix.Position][]Direction)
+	path := make([]matrix.Position, 0, 300)
+	directions := make([][]Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
 			Direction:                  startDirection,
-			Path:                       path,
+			Path:                       &path,
+			Directions:                 &directions,
+			numOfDirectionBatches:      10,
+			currentPathIndex:           0,
 			estimatedDirectionCapacity: 3,
 		},
 		[]func(_ FollowPathContext){},
 		[]func(_ FollowPathContext){
 			func(pathContext FollowPathContext) {
-				if pf.IsLoopSimple(pathContext.Position, pathContext.Direction, path) {
+				if pf.IsLoopSimple(pathContext.Position, pathContext.Direction, pathContext.Path, pathContext.Directions) {
 					looping = true
 					cancel()
 				}
@@ -58,7 +72,6 @@ func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection Direction) (
 }
 
 // Seen checks if the current position has been visited before.
-func (pf *PathFinder[T]) Seen(currentPosition matrix.Position, path map[matrix.Position][]Direction) bool {
-	_, exists := path[currentPosition]
-	return exists
+func (pf *PathFinder[T]) Seen(currentPosition matrix.Position, path *[]matrix.Position) bool {
+	return slices.Contains(*path, currentPosition)
 }
