@@ -101,12 +101,18 @@ func (pf *PathFinder[T]) getRule(currentPosition matrix.Position, currentDirecti
 	return nil, fmt.Errorf("no matching rule found")
 }
 
+type FollowPathContext struct {
+	Position                   matrix.Position
+	Direction                  Direction
+	Path                       map[matrix.Position][]Direction
+	estimatedDirectionCapacity int
+}
+
+// followPath follows the path defined by the given ruleset.
 func (pf *PathFinder[T]) followPath(
-	position matrix.Position,
-	direction Direction,
-	path map[matrix.Position][]Direction,
-	beforeNewPositionCallbacks []func(position matrix.Position, direction Direction, path map[matrix.Position][]Direction),
-	afterNewPositionCallbacks []func(position matrix.Position, direction Direction, path map[matrix.Position][]Direction),
+	fpCtx *FollowPathContext,
+	beforeNewPositionCallbacks []func(ctx FollowPathContext),
+	afterNewPositionCallbacks []func(ctx FollowPathContext),
 	ctx context.Context,
 ) error {
 	select {
@@ -114,13 +120,19 @@ func (pf *PathFinder[T]) followPath(
 		return nil
 	default:
 		for _, beforeNewPositionCallback := range beforeNewPositionCallbacks {
-			beforeNewPositionCallback(position, direction, path)
+			beforeNewPositionCallback(*fpCtx)
 		}
 
-		path[position] = append(path[position], direction)
+		// Initialize the inner direction slice if the position has not been added.
+		if innerSlice, ok := fpCtx.Path[fpCtx.Position]; !ok {
+			innerSlice = make([]Direction, 0, fpCtx.estimatedDirectionCapacity)
+			fpCtx.Path[fpCtx.Position] = innerSlice
+		} else {
+			fpCtx.Path[fpCtx.Position] = append(innerSlice, fpCtx.Direction)
+		}
 
 		// getRule has out of bounds check built in.
-		rule, err := pf.getRule(position, direction)
+		rule, err := pf.getRule(fpCtx.Position, fpCtx.Direction)
 
 		if err != nil {
 			var err *OutOfBoundsError
@@ -131,11 +143,11 @@ func (pf *PathFinder[T]) followPath(
 			return err
 		}
 
-		newDirection := rule.GetNewDirection(position, direction)
-		newPosition := rule.GetNewPosition(position, direction, *pf)
+		newDirection := rule.GetNewDirection(fpCtx.Position, fpCtx.Direction)
+		newPosition := rule.GetNewPosition(fpCtx.Position, fpCtx.Direction, *pf)
 
 		if pf.debugMode {
-			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", position.RowIndex+1, position.ColIndex+1, direction.deltaR, direction.deltaC))
+			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", fpCtx.Position.RowIndex+1, fpCtx.Position.ColIndex+1, fpCtx.Direction.deltaR, fpCtx.Direction.deltaC))
 			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.deltaR, newDirection.deltaC))
 		}
 
@@ -144,10 +156,13 @@ func (pf *PathFinder[T]) followPath(
 		}
 
 		for _, afterNewPositionCallback := range afterNewPositionCallbacks {
-			afterNewPositionCallback(newPosition, newDirection, path)
+			afterNewPositionCallback(*fpCtx)
 		}
 
-		return pf.followPath(newPosition, newDirection, path, beforeNewPositionCallbacks, afterNewPositionCallbacks, ctx)
+		fpCtx.Position = newPosition
+		fpCtx.Direction = newDirection
+
+		return pf.followPath(fpCtx, beforeNewPositionCallbacks, afterNewPositionCallbacks, ctx)
 	}
 }
 
@@ -160,11 +175,14 @@ func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDire
 
 	path := make(map[matrix.Position][]Direction)
 	err = pf.followPath(
-		startPos,
-		startDirection.ToDirection(),
-		path,
-		[]func(_ matrix.Position, _ Direction, _ map[matrix.Position][]Direction){},
-		[]func(position matrix.Position, _ Direction, _ map[matrix.Position][]Direction){},
+		&FollowPathContext{
+			Position:                   startPos,
+			Direction:                  startDirection.ToDirection(),
+			Path:                       path,
+			estimatedDirectionCapacity: 3,
+		},
+		[]func(_ FollowPathContext){},
+		[]func(_ FollowPathContext){},
 		context.Background(),
 	)
 
@@ -185,17 +203,20 @@ func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem
 
 	path := make(map[matrix.Position][]Direction)
 	err = pf.followPath(
-		startPos,
-		startDirection.ToDirection(),
-		path,
-		[]func(position matrix.Position, _ Direction, _ map[matrix.Position][]Direction){
-			func(position matrix.Position, _ Direction, path map[matrix.Position][]Direction) {
-				if !pf.Seen(position, path) {
+		&FollowPathContext{
+			Position:                   startPos,
+			Direction:                  startDirection.ToDirection(),
+			Path:                       path,
+			estimatedDirectionCapacity: 3,
+		},
+		[]func(pathContext FollowPathContext){
+			func(pathContext FollowPathContext) {
+				if !pf.Seen(pathContext.Position, path) {
 					visitedNodeCount++
 				}
 			},
 		},
-		[]func(position matrix.Position, _ Direction, _ map[matrix.Position][]Direction){},
+		[]func(_ FollowPathContext){},
 		context.Background(),
 	)
 

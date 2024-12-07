@@ -1,0 +1,35 @@
+goos: windows
+goarch: amd64
+cpu: 12th Gen Intel(R) Core(TM) i7-12650H
+BenchmarkLoggingSuite/Solve_1x-16         	  102742	     11147 ns/op	   13349 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  109346	     11965 ns/op	   13351 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  107826	     11345 ns/op	   13352 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  102091	     11329 ns/op	   13349 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  103116	     10974 ns/op	   13350 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  106257	     10905 ns/op	   13352 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  108814	     11327 ns/op	   13350 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  112304	     11643 ns/op	   13349 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  108927	     10891 ns/op	   13351 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_1x-16         	  110982	     11147 ns/op	   13353 B/op	     158 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     972	   1353131 ns/op	 1335111 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     660	   1542851 ns/op	 1335032 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     848	   1531182 ns/op	 1334992 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	    1065	   1526929 ns/op	 1335059 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     885	   1417110 ns/op	 1335120 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     774	   1524823 ns/op	 1335103 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     844	   1494037 ns/op	 1335061 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     903	   1514021 ns/op	 1335058 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     946	   1364429 ns/op	 1335113 B/op	   15849 allocs/op
+BenchmarkLoggingSuite/Solve_100x-16       	     801	   1372657 ns/op	 1335282 B/op	   15850 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 169308462 ns/op	133498120 B/op	 1584930 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 132771200 ns/op	133501288 B/op	 1584938 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 131632875 ns/op	133477816 B/op	 1584874 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 137790862 ns/op	133520634 B/op	 1584997 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 129704100 ns/op	133498754 B/op	 1584933 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 127764862 ns/op	133504224 B/op	 1584951 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 130570062 ns/op	133495044 B/op	 1584925 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 127918725 ns/op	133502308 B/op	 1584945 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       8	 127775388 ns/op	133513272 B/op	 1584976 allocs/op
+BenchmarkLoggingSuite/Solve_10000x-16     	       9	 126714200 ns/op	133520803 B/op	 1584999 allocs/op
+PASS
+ok  	command-line-arguments	47.082s

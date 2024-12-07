@@ -1,0 +1,23 @@
+goos: windows
+goarch: amd64
+cpu: 12th Gen Intel(R) Core(TM) i7-12650H
+                             │      O      │                 N_1                 │
+                             │   sec/op    │   sec/op     vs base                │
+LoggingSuite/Solve_1x-16       12.92µ ± 9%   12.66µ ± 7%        ~ (p=0.971 n=10)
+LoggingSuite/Solve_100x-16     1.406m ± 8%   1.672m ± 3%  +18.90% (p=0.000 n=10)
+LoggingSuite/Solve_10000x-16   132.1m ± 9%   140.9m ± 9%   +6.67% (p=0.015 n=10)
+geomean                        1.339m        1.439m        +7.49%
+
+                             │      O       │                 N_1                 │
+                             │     B/op     │     B/op      vs base               │
+LoggingSuite/Solve_1x-16       11.88Ki ± 0%   13.04Ki ± 0%  +9.73% (p=0.000 n=10)
+LoggingSuite/Solve_100x-16     1.160Mi ± 0%   1.273Mi ± 0%  +9.73% (p=0.000 n=10)
+LoggingSuite/Solve_10000x-16   116.0Mi ± 0%   127.3Mi ± 0%  +9.74% (p=0.000 n=10)
+geomean                        1.160Mi        1.273Mi       +9.73%
+
+                             │      O      │                N_1                 │
+                             │  allocs/op  │  allocs/op   vs base               │
+LoggingSuite/Solve_1x-16        162.0 ± 0%    158.0 ± 0%  -2.47% (p=0.000 n=10)
+LoggingSuite/Solve_100x-16     16.25k ± 0%   15.85k ± 0%  -2.46% (p=0.000 n=10)
+LoggingSuite/Solve_10000x-16   1.625M ± 0%   1.585M ± 0%  -2.46% (p=0.000 n=10)
+geomean                        16.23k        15.83k       -2.46%

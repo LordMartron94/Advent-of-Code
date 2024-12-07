@@ -11,3 +11,6 @@
 # Build
 /_internal/input_downloader/build/
 Download_Input.exe
+
+# Benchmark exes
+_internal/benchmarks/results/*.exe

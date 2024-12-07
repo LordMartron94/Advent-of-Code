@@ -17,6 +17,16 @@ import (
 )
 
 func BenchmarkLoggingSuite(b *testing.B) {
+	tmpFile, err := os.CreateTemp("", "benchmark-solve")
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	originalStdout := os.Stdout
+
+	os.Stdout = tmpFile
+
 	prepared := prepare()
 	pathFinder := getPathFinder(prepared)
 
@@ -27,13 +37,15 @@ func BenchmarkLoggingSuite(b *testing.B) {
 		benchmarkSolve(b, 1, pathFinder, startToken, startDirection)
 	})
 
-	//b.Run("Solve 100x", func(b *testing.B) {
-	//	benchmarkSolve(b, 100, pathFinder, startToken, startDirection)
-	//})
-	//
-	//b.Run("Solve 10000x", func(b *testing.B) {
-	//	benchmarkSolve(b, 10000, pathFinder, startToken, startDirection)
-	//})
+	b.Run("Solve 100x", func(b *testing.B) {
+		benchmarkSolve(b, 100, pathFinder, startToken, startDirection)
+	})
+
+	b.Run("Solve 10000x", func(b *testing.B) {
+		benchmarkSolve(b, 10000, pathFinder, startToken, startDirection)
+	})
+
+	os.Stdout = originalStdout
 }
 
 func prepare() common.PipelineContext[task_rules.LexingTokenType] {
@@ -94,16 +106,6 @@ func getPathFinder(pipelineContext common.PipelineContext[task_rules.LexingToken
 }
 
 func benchmarkSolve(b *testing.B, iterations int, pathFinder *pathfinding.PathFinder[shared.Token[task_rules.LexingTokenType]], startToken shared.Token[task_rules.LexingTokenType], startDirection pathfinding.DirectionExternal) {
-	tmpFile, err := os.CreateTemp("", "benchmark-solve")
-	if err != nil {
-		b.Fatal(err)
-	}
-	defer os.Remove(tmpFile.Name())
-
-	originalStdout := os.Stdout
-
-	os.Stdout = tmpFile
-
 	shutdownSignal := make(chan struct{})
 	wg := &sync.WaitGroup{}
 
@@ -119,6 +121,4 @@ func benchmarkSolve(b *testing.B, iterations int, pathFinder *pathfinding.PathFi
 
 	close(shutdownSignal)
 	wg.Wait()
-
-	os.Stdout = originalStdout
 }

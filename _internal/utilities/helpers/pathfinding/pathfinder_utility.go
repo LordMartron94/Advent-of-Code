@@ -33,13 +33,16 @@ func (pf *PathFinder[T]) doesMatrixLoop(startItem T, startDirection Direction) (
 	ctx, cancel := context.WithCancel(context.Background())
 	path := make(map[matrix.Position][]Direction)
 	err = pf.followPath(
-		startPos,
-		startDirection,
-		path,
-		[]func(position matrix.Position, _ Direction, _ map[matrix.Position][]Direction){},
-		[]func(position matrix.Position, currentDirection Direction, path map[matrix.Position][]Direction){
-			func(position matrix.Position, currentDirection Direction, path map[matrix.Position][]Direction) {
-				if pf.IsLoopSimple(position, currentDirection, path) {
+		&FollowPathContext{
+			Position:                   startPos,
+			Direction:                  startDirection,
+			Path:                       path,
+			estimatedDirectionCapacity: 3,
+		},
+		[]func(_ FollowPathContext){},
+		[]func(_ FollowPathContext){
+			func(pathContext FollowPathContext) {
+				if pf.IsLoopSimple(pathContext.Position, pathContext.Direction, path) {
 					looping = true
 					cancel()
 				}
