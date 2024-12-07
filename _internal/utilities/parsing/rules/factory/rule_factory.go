@@ -29,7 +29,6 @@ func (p *ParsingRuleFactory[T]) NewParsingRule(
 	symbol string,
 	matchFunc func([]*shared.Token[T], int) (bool, string),
 	getContentFunc func([]*shared.Token[T], int) *shared2.ParseTree[T],
-	isShell bool,
 	consumeExtra ...int) rules.ParsingRuleInterface[T] {
 	if len(consumeExtra) < 1 {
 		consumeExtra = append(consumeExtra, 0)
@@ -42,7 +41,6 @@ func (p *ParsingRuleFactory[T]) NewParsingRule(
 		SymbolString:   symbol,
 		matchFunc:      matchFunc,
 		getContentFunc: getContentFunc,
-		isShell:        isShell,
 		consumeExtra:   consumeExtra[0],
 	}
 }
@@ -60,7 +58,7 @@ func (p *ParsingRuleFactory[T]) NewSingleTokenParsingRule(symbol string, associa
 			Token:    tokens[index],
 			Children: nil,
 		}
-	}, false)
+	})
 }
 
 // NewSequentialTokenParsingRule returns a new ParsingRule instance that matches a sequence of tokens for the specified types.
@@ -101,7 +99,7 @@ func (p *ParsingRuleFactory[T]) NewSequentialTokenParsingRule(symbol string, tar
 			Token:    nil,
 			Children: children,
 		}
-	}, true)
+	})
 }
 
 // NewMatchUntilTokenParsingRule returns a new ParsingRule instance that matches until a specific token is encountered.
@@ -142,7 +140,7 @@ func (p *ParsingRuleFactory[T]) NewMatchUntilTokenParsingRule(symbol string, tar
 			Token:    nil,
 			Children: children,
 		}
-	}, true)
+	})
 }
 
 func sliceIndex[T comparable](s []T, e T) int {
@@ -200,7 +198,7 @@ func (p *ParsingRuleFactory[T]) NewMatchUntilTokenWithFilterParsingRule(symbol s
 			Token:    nil,
 			Children: children,
 		}
-	}, true)
+	})
 }
 
 // NewMatchExceptParsingRule returns a new ParsingRule instance that matches tokens except for the specified type.
@@ -218,7 +216,7 @@ func (p *ParsingRuleFactory[T]) NewMatchExceptParsingRule(symbol string, exclude
 			Token:    tokens[index],
 			Children: nil,
 		}
-	}, false)
+	})
 }
 
 // NewMatchAnyTokenParsingRule returns a new ParsingRule instance that matches any token.
@@ -232,5 +230,37 @@ func (p *ParsingRuleFactory[T]) NewMatchAnyTokenParsingRule(symbol string) rules
 			Token:    tokens[index],
 			Children: nil,
 		}
-	}, false)
+	})
+}
+
+// NewNestedParsingRule returns a new ParsingRule instance that matches a sequence of child rules.
+func (p *ParsingRuleFactory[T]) NewNestedParsingRule(symbol string, childRules []rules.ParsingRuleInterface[T]) rules.ParsingRuleInterface[T] {
+	matchRuleFunc := func(tokens []*shared.Token[T], index int) (bool, string) {
+		currentIndex := index
+		for _, rule := range childRules {
+			_, err, consumed := rule.Match(tokens, currentIndex)
+			if err != nil {
+				return false, err.Error()
+			}
+			currentIndex += consumed
+		}
+		return true, ""
+	}
+
+	return p.NewParsingRule(symbol, func(tokens []*shared.Token[T], index int) (bool, string) {
+		return matchRuleFunc(tokens, index)
+	}, func(tokens []*shared.Token[T], index int) *shared2.ParseTree[T] {
+		children := make([]*shared2.ParseTree[T], len(childRules))
+		currentIndex := index
+		for i, rule := range childRules {
+			tree, _, consumed := rule.Match(tokens, currentIndex)
+			children[i] = tree
+			currentIndex += consumed
+		}
+		return &shared2.ParseTree[T]{
+			Symbol:   symbol,
+			Token:    nil,
+			Children: children,
+		}
+	})
 }

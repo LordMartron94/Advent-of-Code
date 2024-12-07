@@ -1,6 +1,8 @@
 package factory
 
 import (
+	"slices"
+
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/scanning"
 )
@@ -92,6 +94,25 @@ func (r *RuleFactory[T]) NewCharacterLexingRule(character rune, associatedToken 
 		AssociatedToken: associatedToken,
 		GetContentFunc: func(scanner scanning.PeekInterface) []rune {
 			return []rune{character}
+		},
+	}
+}
+
+func (r *RuleFactory[T]) NewCharacterOptionLexingRule(characters []rune, associatedToken T, symbol string) rules.LexingRuleInterface[T] {
+	return &baseLexingRule[T]{
+		SymbolString: symbol,
+		MatchFunc: func(scanner scanning.PeekInterface) bool {
+			currentRune := scanner.Current()
+
+			if !slices.Contains(characters, currentRune) {
+				return false
+			}
+
+			return true
+		},
+		AssociatedToken: associatedToken,
+		GetContentFunc: func(scanner scanning.PeekInterface) []rune {
+			return []rune{scanner.Current()}
 		},
 	}
 }

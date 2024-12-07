@@ -35,3 +35,17 @@ func (pt *ParseTree[T]) Print(indent int, ignoreTokens []T) {
 		child.Print(indent+1, ignoreTokens)
 	}
 }
+
+func (pt *ParseTree[T]) GetNumberOfTokens() int {
+	var count int
+
+	if pt.Token != nil {
+		count++
+	}
+
+	for _, child := range pt.Children {
+		count += child.GetNumberOfTokens()
+	}
+
+	return count
+}
