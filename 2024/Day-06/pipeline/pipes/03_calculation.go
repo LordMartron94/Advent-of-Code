@@ -19,13 +19,14 @@ func (c *CalculateDataPipe) Process(input common.PipelineContext[task_rules.Lexi
 	const originalTotalExecutionTimeInMS = 289459
 
 	startToken := shared.Token[task_rules.LexingTokenType]{Type: task_rules.CarrotToken, Value: []byte("^")}
-	dotToken := shared.Token[task_rules.LexingTokenType]{Type: task_rules.DotToken, Value: []byte(".")}
+	//dotToken := shared.Token[task_rules.LexingTokenType]{Type: task_rules.DotToken, Value: []byte(".")}
 	hashToken := shared.Token[task_rules.LexingTokenType]{Type: task_rules.HashToken, Value: []byte("#")}
 
 	ruleFactory := factory.NewPathfindingRuleFactory[shared.Token[task_rules.LexingTokenType]]()
 
 	pathFreeFunc := func(finder factory.FinderInterface[shared.Token[task_rules.LexingTokenType]], nextTile shared.Token[task_rules.LexingTokenType]) bool {
-		return !finder.EqualityCheck(nextTile, hashToken)
+		free := !finder.EqualityCheck(nextTile, hashToken)
+		return free
 	}
 
 	rules := []factory.PathfindingRuleInterface[shared.Token[task_rules.LexingTokenType]]{
@@ -49,14 +50,14 @@ func (c *CalculateDataPipe) Process(input common.PipelineContext[task_rules.Lexi
 		panic(err)
 	}
 
-	numOfVariationsLooping, err := pathFinderHelper.GetNumberOfLoopingMatricesForGeneratedVariations(startToken, pathfinding.Up, dotToken, hashToken)
-
-	if err != nil {
-		panic(err)
-	}
+	//numOfVariationsLooping, err := pathFinderHelper.GetNumberOfLoopingMatricesForGeneratedVariations(startToken, pathfinding.Up, dotToken, hashToken)
+	//
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	input.Result = numMoves
-	input.BlockResult = numOfVariationsLooping
+	//input.BlockResult = numOfVariationsLooping
 
 	endTime := time.Now()
 	executionTime := endTime.Sub(startTime)

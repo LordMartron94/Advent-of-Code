@@ -22,22 +22,30 @@ func NewPathfindingRuleset[T any](rules []factory.PathfindingRuleInterface[T], i
 	}
 }
 
-func (prs *PathfindingRuleset[T]) GetRule(currentPosition matrix.Position, currentDirection shared.Direction, finder factory.FinderInterface[T]) (factory.PathfindingRuleInterface[T], error) {
-	if rule, ok := prs.ruleCache[currentDirection]; ok {
-		return rule, nil
+func (prs *PathfindingRuleset[T]) GetRule(currentPosition matrix.Position, currentDirection shared.Direction, finder factory.FinderInterface[T], lastTile T) (factory.PathfindingRuleInterface[T], int, error) {
+	nextTiles := finder.GetTilesInDirection(currentPosition, currentDirection)
+
+	if len(nextTiles) == 0 {
+		return nil, 0, &shared.OutOfBoundsError{}
 	}
+
+	// TODO - Fix Cacheing
+	// TODO - Implement fast-forward based on match amount output
+	//if rule, ok := prs.ruleCache[currentDirection]; ok {
+	//	return rule, 0, nil
+	//}
 
 	for _, rule := range prs.Rules {
-		match, err := rule.MatchFunc(currentPosition, currentDirection, finder)
+		amount := rule.MatchFunc(finder, nextTiles)
 
-		if err != nil {
-			return nil, err
-		}
+		if amount > 0 {
+			if !rule.GetDirectionNeedsPosition() {
+				prs.ruleCache[currentDirection] = rule
+			}
 
-		if match {
-			return rule, nil
+			return rule, amount, nil
 		}
 	}
 
-	return nil, fmt.Errorf("no matching rule found")
+	return nil, 0, fmt.Errorf("no matching rule found")
 }

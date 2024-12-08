@@ -12,6 +12,7 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-06/task_rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules/factory"
+	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
@@ -84,17 +85,17 @@ func getPathFinder(pipelineContext common.PipelineContext[task_rules.LexingToken
 
 	ruleFactory := factory.NewPathfindingRuleFactory[shared.Token[task_rules.LexingTokenType]]()
 
-	pathFreeFunc := func(finder pathfinding.PathFinder[shared.Token[task_rules.LexingTokenType]], nextTile shared.Token[task_rules.LexingTokenType]) bool {
+	pathFreeFunc := func(finder factory.FinderInterface[shared.Token[task_rules.LexingTokenType]], nextTile shared.Token[task_rules.LexingTokenType]) bool {
 		return !finder.EqualityCheck(nextTile, hashToken)
 	}
 
-	rules := []pathfinding.PathfindingRuleInterface[shared.Token[task_rules.LexingTokenType]]{
-		ruleFactory.GetBasicRule(pathFreeFunc, func(currentDirection pathfinding.Direction) pathfinding.Direction {
+	rules := []factory.PathfindingRuleInterface[shared.Token[task_rules.LexingTokenType]]{
+		ruleFactory.GetBasicRule(pathFreeFunc, func(currentDirection shared2.Direction) shared2.Direction {
 			return currentDirection
 		}, 1),
-		ruleFactory.GetBasicRule(func(finder pathfinding.PathFinder[shared.Token[task_rules.LexingTokenType]], nextTile shared.Token[task_rules.LexingTokenType]) bool {
+		ruleFactory.GetBasicRule(func(finder factory.FinderInterface[shared.Token[task_rules.LexingTokenType]], nextTile shared.Token[task_rules.LexingTokenType]) bool {
 			return !pathFreeFunc(finder, nextTile)
-		}, func(currentDirection pathfinding.Direction) pathfinding.Direction {
+		}, func(currentDirection shared2.Direction) shared2.Direction {
 			return currentDirection.TurnRight()
 		}, 1),
 	}

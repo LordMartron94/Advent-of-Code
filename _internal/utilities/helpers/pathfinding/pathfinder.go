@@ -108,12 +108,10 @@ func (pf *PathFinder[T]) followPath(
 
 		pf.appendToPath(fpCtx)
 
-		// getRule has out of bounds check built in.
-		rule, err := pf.ruleSet.GetRule(fpCtx.Position, fpCtx.Direction, pf)
+		rule, _, err := pf.ruleSet.GetRule(fpCtx.Position, fpCtx.Direction, pf, pf.GetItemAtPosition(fpCtx.Position))
 
 		if err != nil {
-			var err *shared.OutOfBoundsError
-			if errors.As(err, &err) {
+			if errors.Is(err, &shared.OutOfBoundsError{}) {
 				return nil
 			}
 
@@ -126,6 +124,7 @@ func (pf *PathFinder[T]) followPath(
 		if pf.debugMode {
 			fmt.Println(fmt.Sprintf("Old position: (%d, %d), old direction: (%d, %d)", fpCtx.Position.RowIndex+1, fpCtx.Position.ColIndex+1, fpCtx.Direction.DeltaR, fpCtx.Direction.DeltaC))
 			fmt.Println(fmt.Sprintf("New position: (%d, %d), new direction: (%d, %d)", newPosition.RowIndex+1, newPosition.ColIndex+1, newDirection.DeltaR, newDirection.DeltaC))
+			fmt.Println("---------------")
 		}
 
 		fpCtx.Position = newPosition
@@ -285,6 +284,19 @@ func (pf *PathFinder[T]) OutOfBounds(pos matrix.Position) bool {
 
 func (pf *PathFinder[T]) GetItemAtPosition(pos matrix.Position) T {
 	return pf.matrixHelper.GetAtPosition(pos.RowIndex, pos.ColIndex)
+}
+
+func (pf *PathFinder[T]) GetTilesInDirection(pos matrix.Position, direction shared.Direction) []T {
+	output := make([]T, 0)
+
+	posToCheck := pf.GetPositionInDirection(pos, direction, 1)
+
+	for !pf.OutOfBounds(posToCheck) {
+		output = append(output, pf.GetItemAtPosition(posToCheck))
+		posToCheck = pf.GetPositionInDirection(posToCheck, direction, 1)
+	}
+
+	return output
 }
 
 func (pf *PathFinder[T]) EqualityCheck(a, b T) bool {
