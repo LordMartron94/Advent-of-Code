@@ -1,5 +1,11 @@
 package matrix
 
+import (
+	"fmt"
+
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
+)
+
 type DiagonalDirection int
 
 const (
@@ -10,6 +16,38 @@ const (
 type Position struct {
 	RowIndex int
 	ColIndex int
+}
+
+func (p Position) String() string {
+	return fmt.Sprintf("(%d, %d)", p.RowIndex+1, p.ColIndex+1)
+}
+
+func (p Position) Add(pos Position) Position {
+	return Position{
+		RowIndex: p.RowIndex + pos.RowIndex,
+		ColIndex: p.ColIndex + pos.ColIndex,
+	}
+}
+
+func (p Position) Subtract(pos Position) Position {
+	return Position{
+		RowIndex: p.RowIndex - pos.RowIndex,
+		ColIndex: p.ColIndex - pos.ColIndex,
+	}
+}
+
+func (p Position) Scale(scaleFactor float64) Position {
+	return Position{
+		RowIndex: int(float64(p.RowIndex) * scaleFactor),
+		ColIndex: int(float64(p.ColIndex) * scaleFactor),
+	}
+}
+
+func (p Position) AddDirection(direction shared.Direction, amount int) Position {
+	return Position{
+		RowIndex: p.RowIndex + (direction.DeltaR * amount),
+		ColIndex: p.ColIndex + (direction.DeltaC * amount),
+	}
 }
 
 // MatrixHelper is a helper struct for working with a 2D matrix.

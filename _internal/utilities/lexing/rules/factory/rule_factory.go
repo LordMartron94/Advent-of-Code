@@ -206,3 +206,28 @@ func (r *RuleFactory[T]) NewWhitespaceLexingRule(tokenType T, symbol string) rul
 		},
 	}
 }
+
+// NewAlphanumericCharacterLexingRuleSingle creates a new lexing rule for a single alphanumeric character.
+func (r *RuleFactory[T]) NewAlphanumericCharacterLexingRuleSingle(tokenType T, symbol string) rules.LexingRuleInterface[T] {
+	vFunc := func(r rune) bool {
+		return ('a' <= r && r <= 'z') || ('A' <= r && r <= 'Z') || ('0' <= r && r <= '9')
+	}
+	mFunc := func(scanner scanning.PeekInterface) bool {
+		currentRune := scanner.Current()
+
+		if !vFunc(currentRune) {
+			return false
+		}
+
+		return true
+	}
+
+	return &baseLexingRule[T]{
+		SymbolString:    symbol,
+		MatchFunc:       mFunc,
+		AssociatedToken: tokenType,
+		GetContentFunc: func(scanner scanning.PeekInterface) []rune {
+			return []rune{scanner.Current()}
+		},
+	}
+}

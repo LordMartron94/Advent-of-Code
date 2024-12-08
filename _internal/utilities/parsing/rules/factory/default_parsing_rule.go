@@ -28,5 +28,9 @@ func (b *BaseParsingRule[T]) Match(tokens []*shared.Token[T], currentIndex int) 
 
 	tree := b.getContentFunc(tokens, currentIndex)
 
+	if tree == nil {
+		panic("getContentFunc returned nil for rule " + b.SymbolString)
+	}
+
 	return tree, nil, tree.GetNumberOfTokens() + b.consumeExtra
 }

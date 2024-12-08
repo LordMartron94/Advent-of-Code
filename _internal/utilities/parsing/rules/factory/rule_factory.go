@@ -264,3 +264,46 @@ func (p *ParsingRuleFactory[T]) NewNestedParsingRule(symbol string, childRules [
 		}
 	})
 }
+
+// NewOptionalNestedParsingRule returns a new ParsingRule instance that matches
+// a sequence of child rules as long as the sequence matches.
+func (p *ParsingRuleFactory[T]) NewOptionalNestedParsingRule(symbol string, childRules []rules.ParsingRuleInterface[T]) rules.ParsingRuleInterface[T] {
+	matchRuleFunc := func(tokens []*shared.Token[T], index int) (bool, string) {
+		currentIndex := index
+		for _, rule := range childRules {
+			_, err, consumed := rule.Match(tokens, currentIndex)
+			if err == nil {
+				return true, ""
+			}
+			currentIndex += consumed
+		}
+		return false, "No matching child rule found for " + symbol
+	}
+
+	return p.NewParsingRule(symbol, func(tokens []*shared.Token[T], index int) (bool, string) {
+		return matchRuleFunc(tokens, index)
+	}, func(tokens []*shared.Token[T], index int) *shared2.ParseTree[T] {
+		children := make([]*shared2.ParseTree[T], 0)
+		currentIndex := index
+		for {
+			matched := false
+			for _, rule := range childRules {
+				tree, _, consumed := rule.Match(tokens, currentIndex)
+				if tree != nil {
+					children = append(children, tree)
+					currentIndex += consumed
+					matched = true
+					break
+				}
+			}
+			if !matched {
+				break
+			}
+		}
+		return &shared2.ParseTree[T]{
+			Symbol:   symbol,
+			Token:    nil,
+			Children: children,
+		}
+	})
+}

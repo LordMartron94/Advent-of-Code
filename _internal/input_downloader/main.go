@@ -156,7 +156,7 @@ import (
 )
 
 const year = ${year}
-const day = ${day}
+const day = ${dayS}
 
 func main() {
 	utilities.ChangeWorkingDirectoryToSpecificTask(year, day)
@@ -200,11 +200,13 @@ func main() {
 `
 	dayPaddedString := strconv.Itoa(day)
 
+	goMainContent := strings.Replace(rawContent, "${dayS}", dayPaddedString, -1)
+
 	if len(dayPaddedString) < 2 {
 		dayPaddedString = "0" + dayPaddedString
 	}
 
-	goMainContent := strings.Replace(rawContent, "${year}", strconv.Itoa(year), -1)
+	goMainContent = strings.Replace(goMainContent, "${year}", strconv.Itoa(year), -1)
 	goMainContent = strings.Replace(goMainContent, "${day}", dayPaddedString, -1)
 
 	writeFile([]byte(goMainContent), year, day, "main.go")

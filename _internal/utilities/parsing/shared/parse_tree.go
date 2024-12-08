@@ -15,6 +15,10 @@ type ParseTree[T comparable] struct {
 
 // Print prints the parse tree with indentation
 func (pt *ParseTree[T]) Print(indent int, ignoreTokens []T) {
+	if pt == nil {
+		return
+	}
+
 	for _, ignoreToken := range ignoreTokens {
 		if pt.Token == nil {
 			continue
@@ -44,6 +48,10 @@ func (pt *ParseTree[T]) GetNumberOfTokens() int {
 	}
 
 	for _, child := range pt.Children {
+		if child == nil {
+			continue
+		}
+
 		count += child.GetNumberOfTokens()
 	}
 

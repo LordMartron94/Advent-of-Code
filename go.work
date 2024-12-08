@@ -11,6 +11,7 @@ use (
 	2024/Day-05
 	2024/Day-06
 	2024/Day-07
+	2024/Day-08
 )
 
 replace github.com/LordMartron94/Advent-of-Code/_internal/utilities v0.0.0-unpublished => "./_internal/utilities"

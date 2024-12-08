@@ -282,3 +282,21 @@ func ApplyFunctionToGeneratedVariationsGeneric[T any](slice []T, from T, nextSta
 		panic(fmt.Sprintf("Expected %d variations, but got %d", totalVariationsExpected, len(variations)))
 	}
 }
+
+func SliceContainsEqualityComparer[T any](slice []T, item T, equalityFunc func(a, b T) bool) bool {
+	for _, v := range slice {
+		if equalityFunc(v, item) {
+			return true
+		}
+	}
+	return false
+}
+
+func SliceGetIndexOfEqualityComparer[T any](slice []T, item T, equalityFunc func(a, b T) bool) int {
+	for i, v := range slice {
+		if equalityFunc(v, item) {
+			return i
+		}
+	}
+	return -1
+}
