@@ -77,13 +77,24 @@ func GetFormattedString[T any](slice []T) string {
 	return formattedString
 }
 
-//2.  Systematic Generation
-//
-//Start with all zeros: Begin with a sequence of 'n' zeros (e.g., for n=3, start with "000").
-//Increment: Imagine you're counting upwards. Increase the rightmost digit.
-//If it's a 0, it becomes a 1.
-//If it's a 1, it becomes a 0, and you "carry over" the increment to the next digit to the left.
-//Repeat: Continue this process of incrementing and carrying over until you reach a sequence of all ones.
+// GetFormattedStringNil returns a formatted string representation of the given slice.
+func GetFormattedStringNil[T any](slice []*T) string {
+	formattedString := ""
+	for _, item := range slice {
+		if item == nil {
+			formattedString += "nil, "
+		} else {
+			formattedString += fmt.Sprintf("%v, ", *item)
+		}
+	}
+	if len(formattedString) > 0 {
+		formattedString = "[" + formattedString[:len(formattedString)-1] + "]"
+	} else {
+		formattedString = "[" + formattedString + "]"
+	}
+
+	return formattedString
+}
 
 func switchBinary[T comparable](item, from, to T) T {
 	if item == from {

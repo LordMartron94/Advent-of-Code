@@ -307,3 +307,40 @@ func (p *ParsingRuleFactory[T]) NewOptionalNestedParsingRule(symbol string, chil
 		}
 	})
 }
+
+func (p *ParsingRuleFactory[T]) NewPairRule(symbol string, firstElementTokenType T, secondElementTokenType T, firstElementMatchingRule rules.ParsingRuleInterface[T], secondElementMatchingRule rules.ParsingRuleInterface[T]) rules.ParsingRuleInterface[T] {
+	return p.NewParsingRule(symbol, func(tokens []*shared.Token[T], index int) (bool, string) {
+		if index >= len(tokens)-1 {
+			return false, "Not enough tokens to form a pair"
+		}
+
+		// Check if the first token matches the first element rule and type
+		firstMatch, _, firstConsumed := firstElementMatchingRule.Match(tokens, index)
+		if firstMatch == nil || tokens[index].Type != firstElementTokenType {
+			return false, "First element does not match the rule or type"
+		}
+
+		// Check if the second token matches the second element rule and type
+		secondMatch, _, _ := secondElementMatchingRule.Match(tokens, index+firstConsumed)
+		if secondMatch == nil || tokens[index+firstConsumed].Type != secondElementTokenType {
+			return false, "Second element does not match the rule or type"
+		}
+
+		return true, ""
+	}, func(tokens []*shared.Token[T], index int) *shared2.ParseTree[T] {
+		firstTree, _, firstConsumed := firstElementMatchingRule.Match(tokens, index)
+		secondTree, _, _ := secondElementMatchingRule.Match(tokens, index+firstConsumed)
+
+		firstTree.Symbol = "first_element"
+		secondTree.Symbol = "second_element"
+
+		return &shared2.ParseTree[T]{
+			Symbol: symbol,
+			Token:  nil,
+			Children: []*shared2.ParseTree[T]{
+				firstTree,
+				secondTree,
+			},
+		}
+	})
+}
