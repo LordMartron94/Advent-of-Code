@@ -6,7 +6,7 @@ import (
 
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-05/pipeline/common"
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-05/task_rules"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/transforming"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/graph"
 )
 
 type CalculateDataPipe struct {
@@ -58,7 +58,7 @@ func (c *CalculateDataPipe) GetManualUpdateCombinations(manuals [][]int, updates
 }
 
 func (c *CalculateDataPipe) MergeManuals(manualPairs [][]int) []int {
-	graphHelper := transforming.NewGraphHelper()
+	graphHelper := graph.NewGraphHelper()
 
 	sorted := graphHelper.TopologicalSortPairs(manualPairs)
 

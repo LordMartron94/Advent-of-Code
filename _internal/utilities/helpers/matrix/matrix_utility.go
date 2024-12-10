@@ -181,11 +181,11 @@ func (mH *MatrixHelper[T]) GetExtendedLinePositions(distance Distance) (before *
 		DeltaC: distance.cDistRaw,
 	}
 
-	// Get the position 'before' posA
+	// Get the Position 'before' posA
 	bf := distance.PosA.AddDirection(direction, 1)
 	before = &bf
 
-	// Get the position 'after' posB
+	// Get the Position 'after' posB
 	af := distance.PosB.AddDirection(direction, -1)
 	after = &af
 

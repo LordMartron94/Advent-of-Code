@@ -69,7 +69,7 @@ func GetFormattedString[T any](slice []T) string {
 		formattedString += fmt.Sprintf("%v, ", item)
 	}
 	if len(formattedString) > 0 {
-		formattedString = "[" + formattedString[:len(formattedString)-1] + "]"
+		formattedString = "[" + formattedString[:len(formattedString)-2] + "]"
 	} else {
 		formattedString = "[" + formattedString + "]"
 	}
@@ -88,7 +88,7 @@ func GetFormattedStringNil[T any](slice []*T) string {
 		}
 	}
 	if len(formattedString) > 0 {
-		formattedString = "[" + formattedString[:len(formattedString)-1] + "]"
+		formattedString = "[" + formattedString[:len(formattedString)-2] + "]"
 	} else {
 		formattedString = "[" + formattedString + "]"
 	}

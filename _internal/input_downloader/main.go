@@ -189,6 +189,8 @@ func main() {
 
 	pipesToRun := []pipeline2.Pipe[common.PipelineContext[task_rules.LexingTokenType]]{
 		&pipes.GetInputDataPipe{},
+		//&pipes.TransformDataPipe{},
+        //&pipes.CalculateDataPipe{},
 	}
 
 	startingContext := common.NewPipelineContext[task_rules.LexingTokenType](file)
@@ -196,6 +198,7 @@ func main() {
 	result := pipeline.Process(*startingContext)
 
 	fmt.Println(fmt.Sprintf("Final result (task 1): %d", result.Result))
+	fmt.Println(fmt.Sprintf("Final result (task 2): %d", result.Result2))
 }
 `
 	dayPaddedString := strconv.Itoa(day)

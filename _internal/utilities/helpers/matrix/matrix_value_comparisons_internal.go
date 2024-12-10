@@ -63,14 +63,38 @@ func (mH *MatrixHelper[T]) FindConsecutiveMatchesNumberInDiagonals(targets []T, 
 		mH.FindConsecutiveMatchesNumberInDiagonal(targets, reverseAllowed, DiagonalTopRight)
 }
 
-func (mH *MatrixHelper[T]) GetPositionOfTarget(target T) *Position {
+func (mH *MatrixHelper[T]) GetPositionOfTarget(target T, customComparer *func(a, b T) bool) *Position {
+	var comparer = mH.equalityComparer
+	if customComparer != nil {
+		comparer = *customComparer
+	}
+
 	for r, row := range mH.itemsInMatrixNormalRows {
 		for c, item := range row {
-			if mH.equalityComparer(item, target) {
+			if comparer(item, target) {
 				return &Position{RowIndex: r, ColIndex: c}
 			}
 		}
 	}
 
 	return nil
+}
+
+func (mH *MatrixHelper[T]) GetPositionsOfTarget(target T, customComparer *func(a, b T) bool) []*Position {
+	var comparer = mH.equalityComparer
+	if customComparer != nil {
+		comparer = *customComparer
+	}
+
+	positions := make([]*Position, 0)
+
+	for r, row := range mH.itemsInMatrixNormalRows {
+		for c, item := range row {
+			if comparer(item, target) {
+				positions = append(positions, &Position{RowIndex: r, ColIndex: c})
+			}
+		}
+	}
+
+	return positions
 }

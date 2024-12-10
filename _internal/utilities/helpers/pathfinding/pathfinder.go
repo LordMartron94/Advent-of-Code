@@ -55,7 +55,7 @@ func NewPathFinder[T any](matrixToUse [][]T, equalityChecker func(a, b T) bool, 
 
 // getStartingPosition finds the starting position of the given item in the matrix.
 func (pf *PathFinder[T]) getStartingPosition(startItem T) (matrix.Position, error) {
-	foundPos := pf.matrixHelper.GetPositionOfTarget(startItem)
+	foundPos := pf.matrixHelper.GetPositionOfTarget(startItem, nil)
 
 	if foundPos == nil {
 		return matrix.Position{}, fmt.Errorf("start item not found in the matrix")

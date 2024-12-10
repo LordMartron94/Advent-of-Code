@@ -3,6 +3,7 @@ package matrix
 import (
 	"fmt"
 
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/extensions"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 )
 
@@ -147,7 +148,7 @@ func (mH *MatrixHelper[T]) GetAtPosition(rowIndex int, colIndex int) T {
 	return mH.itemsInMatrixNormalRows[rowIndex][colIndex]
 }
 
-// GetMatrixVariation returns a new matrix with the specified position replaced with the replacement value.
+// GetMatrixVariation returns a new matrix with the specified Position replaced with the replacement value.
 func (mH *MatrixHelper[T]) GetMatrixVariation(r int, c int, value T) [][]T {
 	newMatrix := make([][]T, mH.rowCount)
 	for rI := 0; rI < mH.rowCount; rI++ {
@@ -170,4 +171,63 @@ func (mH *MatrixHelper[T]) ReplaceValueInPlace(r int, c int, value T) {
 	}
 
 	mH.itemsInMatrixNormalRows[r][c] = value
+}
+
+type Neighbor[T any] struct {
+	Position Position
+	Value    T
+}
+
+func (n Neighbor[T]) String() string {
+	return fmt.Sprintf("[%s, %v]", n.Position, n.Value)
+}
+
+// GetAdjacencyListHorizontalVertical creates an adjacency list from a matrix,
+// considering only horizontal and vertical neighbors, and preserving neighbor positions.
+func (mH *MatrixHelper[T]) GetAdjacencyListHorizontalVertical() ([][]Neighbor[T], int) {
+	adjacencyList := make([][]Neighbor[T], mH.rowCount*mH.columnCount)
+	nodeCount := 0
+
+	for r := 0; r < mH.rowCount; r++ {
+		for c := 0; c < mH.columnCount; c++ {
+			neighbors := make([]Neighbor[T], 0)
+
+			if !mH.OutOfBounds(r-1, c) {
+				neighbors = append(neighbors, Neighbor[T]{Position{RowIndex: r - 1, ColIndex: c}, mH.GetAtPosition(r-1, c)})
+			}
+			if !mH.OutOfBounds(r+1, c) {
+				neighbors = append(neighbors, Neighbor[T]{Position{RowIndex: r + 1, ColIndex: c}, mH.GetAtPosition(r+1, c)})
+			}
+			if !mH.OutOfBounds(r, c-1) {
+				neighbors = append(neighbors, Neighbor[T]{Position{RowIndex: r, ColIndex: c - 1}, mH.GetAtPosition(r, c-1)})
+			}
+			if !mH.OutOfBounds(r, c+1) {
+				neighbors = append(neighbors, Neighbor[T]{Position{RowIndex: r, ColIndex: c + 1}, mH.GetAtPosition(r, c+1)})
+			}
+
+			index := r*mH.columnCount + c
+			adjacencyList[index] = neighbors
+			nodeCount++
+		}
+	}
+
+	return adjacencyList, nodeCount
+}
+
+func (mH *MatrixHelper[T]) PrintAdjacencyListHorizontalVertical() {
+	adjacencyList, _ := mH.GetAdjacencyListHorizontalVertical()
+
+	for i, neighbors := range adjacencyList {
+		row := i / mH.columnCount
+		col := i % mH.columnCount
+		fmt.Printf("(%d, %d) - %s\n", row, col, extensions.GetFormattedString(neighbors))
+	}
+}
+
+func (mH *MatrixHelper[T]) GetColumnCount() int {
+	return mH.columnCount
+}
+
+func (mH *MatrixHelper[T]) GetRowCount() int {
+	return mH.rowCount
 }
