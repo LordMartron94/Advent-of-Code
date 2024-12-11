@@ -1,0 +1,15 @@
+goos: windows
+goarch: amd64
+cpu: 12th Gen Intel(R) Core(TM) i7-12650H
+BenchmarkStoneSuite/Solve_20x-16         	     259	   5352589 ns/op	 6543464 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     264	   4638908 ns/op	 6543465 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     274	   4180284 ns/op	 6543362 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     290	   4020842 ns/op	 6543341 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     300	   4004209 ns/op	 6543493 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     307	   3843158 ns/op	 6543352 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     284	   4141884 ns/op	 6543379 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     300	   4043950 ns/op	 6543324 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     306	   3990237 ns/op	 6543360 B/op	   97330 allocs/op
+BenchmarkStoneSuite/Solve_20x-16         	     295	   3886664 ns/op	 6543628 B/op	   97330 allocs/op
+PASS
+ok  	command-line-arguments	16.572s

@@ -1,0 +1,14 @@
+goos: windows
+goarch: amd64
+cpu: 12th Gen Intel(R) Core(TM) i7-12650H
+                        │      O       │                 N_1                 │
+                        │    sec/op    │   sec/op     vs base                │
+StoneSuite/Solve_20x-16   2.271m ± 11%   1.668m ± 8%  -26.57% (p=0.000 n=10)
+
+                        │      O       │                 N_1                 │
+                        │     B/op     │     B/op      vs base               │
+StoneSuite/Solve_20x-16   2.324Mi ± 0%   2.442Mi ± 0%  +5.07% (p=0.000 n=10)
+
+                        │     O      │                N_1                 │
+                        │ allocs/op  │ allocs/op   vs base                │
+StoneSuite/Solve_20x-16   520.0 ± 0%   593.0 ± 0%  +14.04% (p=0.000 n=10)

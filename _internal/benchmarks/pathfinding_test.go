@@ -17,7 +17,7 @@ import (
 	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )
 
-func BenchmarkLoggingSuite(b *testing.B) {
+func BenchmarkSolvingSuite(b *testing.B) {
 	tmpFile, err := os.CreateTemp("", "benchmark-solve")
 	if err != nil {
 		b.Fatal(err)
@@ -28,7 +28,7 @@ func BenchmarkLoggingSuite(b *testing.B) {
 
 	os.Stdout = tmpFile
 
-	prepared := prepare()
+	prepared := prepareSolve()
 	pathFinder := getPathFinder(prepared)
 
 	startToken := shared.Token[task_rules.LexingTokenType]{Type: task_rules.CarrotToken, Value: []byte("^")}
@@ -49,7 +49,7 @@ func BenchmarkLoggingSuite(b *testing.B) {
 	os.Stdout = originalStdout
 }
 
-func prepare() common.PipelineContext[task_rules.LexingTokenType] {
+func prepareSolve() common.PipelineContext[task_rules.LexingTokenType] {
 	fileDir, _ := os.Getwd()
 	currentDir := filepath.Dir(fileDir)
 	rootDir := filepath.Join(currentDir, "..")
