@@ -10,9 +10,9 @@ import (
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-06/pipeline/common"
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-06/pipeline/pipes"
 	"github.com/LordMartron94/Advent-of-Code/2024/Day-06/task_rules"
+	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules/factory"
-	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/lexing/shared"
 	pipeline2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/patterns/pipeline"
 )

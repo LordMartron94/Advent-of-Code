@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
+	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules/factory"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 )
@@ -11,18 +12,18 @@ import (
 type PathfindingRuleset[T any] struct {
 	IsBasic   bool // Set to true if the ruleset is simple (follow current direction until obstacle, if obstacle, do x)... Two rules.
 	Rules     []factory.PathfindingRuleInterface[T]
-	ruleCache map[shared.Direction]factory.PathfindingRuleInterface[T]
+	ruleCache map[shared2.Direction]factory.PathfindingRuleInterface[T]
 }
 
 func NewPathfindingRuleset[T any](rules []factory.PathfindingRuleInterface[T], isBasic bool) *PathfindingRuleset[T] {
 	return &PathfindingRuleset[T]{
 		IsBasic:   isBasic,
 		Rules:     rules,
-		ruleCache: make(map[shared.Direction]factory.PathfindingRuleInterface[T]),
+		ruleCache: make(map[shared2.Direction]factory.PathfindingRuleInterface[T]),
 	}
 }
 
-func (prs *PathfindingRuleset[T]) GetRule(currentPosition matrix.Position, currentDirection shared.Direction, finder factory.FinderInterface[T], lastTile T) (factory.PathfindingRuleInterface[T], int, error) {
+func (prs *PathfindingRuleset[T]) GetRule(currentPosition matrix.Position, currentDirection shared2.Direction, finder factory.FinderInterface[T], lastTile T) (factory.PathfindingRuleInterface[T], int, error) {
 	nextTiles := finder.GetTilesInDirection(currentPosition, currentDirection)
 
 	if len(nextTiles) == 0 {

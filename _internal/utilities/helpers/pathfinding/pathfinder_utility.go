@@ -6,7 +6,7 @@ import (
 	"slices"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 )
 
 // IsLoopSimple checks if the current position is part of a loop formed by the given path and current direction.

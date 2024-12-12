@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/extensions"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 )
 
 type Distance struct {

@@ -2,7 +2,7 @@ package factory
 
 import (
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 )
 
 type PathfindingRuleFactory[T any] struct {

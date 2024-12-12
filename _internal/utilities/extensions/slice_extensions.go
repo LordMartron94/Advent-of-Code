@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"sort"
 )
 
 // FindNumberOfMatchesInSlice returns the amount of occurrences for the target value in the given slice.
@@ -66,6 +67,29 @@ func FindNumberOfMatchesInSliceV2[T any](slice []T, targets []T, reverseAllowed 
 func GetFormattedString[T any](slice []T) string {
 	formattedString := ""
 	for _, item := range slice {
+		formattedString += fmt.Sprintf("%v, ", item)
+	}
+	if len(formattedString) > 0 {
+		formattedString = "[" + formattedString[:len(formattedString)-2] + "]"
+	} else {
+		formattedString = "[" + formattedString + "]"
+	}
+
+	return formattedString
+}
+
+// GetFormattedStringSorted returns a formatted string representation of the given slice but with a sort function.
+// Useful if you don't want to sort the original slice, but only the printed output.
+func GetFormattedStringSorted[T any](slice []T, sortComparison func(a, b T) bool) string {
+	sortedSlice := make([]T, len(slice))
+	copy(sortedSlice, slice)
+
+	sort.Slice(sortedSlice, func(i, j int) bool {
+		return sortComparison(sortedSlice[i], sortedSlice[j])
+	})
+
+	formattedString := ""
+	for _, item := range sortedSlice {
 		formattedString += fmt.Sprintf("%v, ", item)
 	}
 	if len(formattedString) > 0 {

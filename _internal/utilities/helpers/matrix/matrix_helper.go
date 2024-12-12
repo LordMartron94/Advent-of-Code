@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/extensions"
-	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
+	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 )
 
 type DiagonalDirection int
@@ -230,4 +230,107 @@ func (mH *MatrixHelper[T]) GetColumnCount() int {
 
 func (mH *MatrixHelper[T]) GetRowCount() int {
 	return mH.rowCount
+}
+
+func (mH *MatrixHelper[T]) GetRegions(customComparer *func(a, b T) bool, numOfOuterPlots *[]int) [][]Position {
+	comparer := mH.equalityComparer
+	if customComparer != nil {
+		comparer = *customComparer
+	}
+
+	regions := make([][]Position, 0)
+	visited := make([][]bool, mH.rowCount)
+	for i := range visited {
+		visited[i] = make([]bool, mH.columnCount)
+	}
+
+	for r := 0; r < mH.rowCount; r++ {
+		for c := 0; c < mH.columnCount; c++ {
+			if !visited[r][c] {
+				region := make([]Position, 0)
+				numOuterPlots := 0
+				mH.dfs(r, c, &visited, &region, comparer, &numOuterPlots)
+				if len(region) > 0 {
+					regions = append(regions, region)
+					*numOfOuterPlots = append(*numOfOuterPlots, numOuterPlots)
+				}
+			}
+		}
+	}
+
+	return regions
+}
+
+func (mH *MatrixHelper[T]) dfs(row, col int, visited *[][]bool, region *[]Position, comparer func(a, b T) bool, numOuterPlots *int) {
+	if mH.OutOfBounds(row, col) || (*visited)[row][col] {
+		return
+	}
+
+	(*visited)[row][col] = true
+	*region = append(*region, Position{row, col})
+
+	// Explore neighbors
+	directions := [][]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+
+	for _, dir := range directions {
+		newRow, newCol := row+dir[0], col+dir[1]
+
+		if mH.OutOfBounds(newRow, newCol) || !comparer(mH.GetAtPosition(row, col), mH.GetAtPosition(newRow, newCol)) {
+			*numOuterPlots++
+		} else if !(*visited)[newRow][newCol] {
+			mH.dfs(newRow, newCol, visited, region, comparer, numOuterPlots)
+		}
+	}
+}
+
+func (mH *MatrixHelper[T]) getNeighboringPositions(position Position, dir1, dir2 shared.Direction) (Position, Position, Position) {
+	// Calculate coordinates of neighboring positions
+	neighbor1Row := position.RowIndex + dir1.DeltaR
+	neighbor1Col := position.ColIndex + dir1.DeltaC
+
+	neighbor2Row := position.RowIndex + dir2.DeltaR
+	neighbor2Col := position.ColIndex + dir2.DeltaC
+
+	cornerRow := position.RowIndex + dir1.DeltaR + dir2.DeltaR
+	cornerCol := position.ColIndex + dir1.DeltaC + dir2.DeltaC
+
+	neighbor1 := Position{RowIndex: neighbor1Row, ColIndex: neighbor1Col}
+	neighbor2 := Position{RowIndex: neighbor2Row, ColIndex: neighbor2Col}
+	corner := Position{RowIndex: cornerRow, ColIndex: cornerCol}
+
+	return neighbor1, neighbor2, corner
+}
+
+func (mH *MatrixHelper[T]) GetNumberOfAngles(polygon []Position) int {
+	angleCount := 0
+	directions := []shared.DirectionExternal{shared.Up, shared.Right, shared.Down, shared.Left}
+
+	// Keep track of visited positions to avoid double-counting angles
+	visited := make(map[Position]bool)
+	for _, position := range polygon {
+		visited[position] = true
+	}
+
+	for _, position := range polygon {
+		for i := 0; i < len(directions); i++ {
+			j := (i + 1) % len(directions) // Get the next direction circularly
+			neighbor1, neighbor2, corner := mH.getNeighboringPositions(position, directions[i].ToDirection(), directions[j].ToDirection())
+
+			// Check for internal and external angles
+			if !visited[neighbor1] && !visited[neighbor2] {
+				angleCount++
+			} else if visited[neighbor1] && visited[neighbor2] && !visited[corner] {
+				angleCount++
+			}
+		}
+	}
+
+	return angleCount
+}
+
+func (mH *MatrixHelper[T]) GetNumberOfEdgesAroundPolygon(polygon []Position) int {
+	// Discount inspired by: https://www.sciencing.com/how-to-find-the-number-of-sides-of-a-polygon-12751688/
+	// Basically, the sides of a polygon are always equal to the number of angles it has.
+
+	return mH.GetNumberOfAngles(polygon)
 }

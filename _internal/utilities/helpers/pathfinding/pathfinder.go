@@ -6,34 +6,11 @@ import (
 	"fmt"
 
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix"
+	shared2 "github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/matrix/shared"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/rules/factory"
 	"github.com/LordMartron94/Advent-of-Code/_internal/utilities/helpers/pathfinding/shared"
 )
-
-type DirectionExternal int
-
-const (
-	Down DirectionExternal = iota
-	Left
-	Right
-	Up
-)
-
-func (d DirectionExternal) ToDirection() shared.Direction {
-	switch d {
-	case Down:
-		return shared.Direction{DeltaR: 1, DeltaC: 0}
-	case Left:
-		return shared.Direction{DeltaR: 0, DeltaC: -1}
-	case Right:
-		return shared.Direction{DeltaR: 0, DeltaC: 1}
-	case Up:
-		return shared.Direction{DeltaR: -1, DeltaC: 0}
-	default:
-		return shared.Direction{}
-	}
-}
 
 type PathFinder[T any] struct {
 	matrixHelper    *matrix.MatrixHelper[T]
@@ -66,9 +43,9 @@ func (pf *PathFinder[T]) getStartingPosition(startItem T) (matrix.Position, erro
 
 type FollowPathContext struct {
 	Position                   matrix.Position
-	Direction                  shared.Direction
+	Direction                  shared2.Direction
 	Path                       *[]matrix.Position
-	Directions                 *[][]shared.Direction
+	Directions                 *[][]shared2.Direction
 	currentPathIndex           int
 	estimatedDirectionCapacity int
 	numOfDirectionBatches      int
@@ -78,7 +55,7 @@ func (pf *PathFinder[T]) appendToPath(fpCtx *FollowPathContext) {
 	// We only need to initialize the directions slice if we are at the cap and need to insert a new one.
 	if fpCtx.currentPathIndex == len(*fpCtx.Directions) {
 		for range fpCtx.numOfDirectionBatches {
-			*fpCtx.Directions = append(*fpCtx.Directions, make([]shared.Direction, 0, fpCtx.estimatedDirectionCapacity))
+			*fpCtx.Directions = append(*fpCtx.Directions, make([]shared2.Direction, 0, fpCtx.estimatedDirectionCapacity))
 		}
 	}
 
@@ -138,7 +115,7 @@ func (pf *PathFinder[T]) followPath(
 	}
 }
 
-func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDirection DirectionExternal) (int, error) {
+func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDirection shared2.DirectionExternal) (int, error) {
 	startPos, err := pf.getStartingPosition(startItem)
 
 	if err != nil {
@@ -146,7 +123,7 @@ func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDire
 	}
 
 	path := make([]matrix.Position, 0, 300)
-	directions := make([][]shared.Direction, 0, 300)
+	directions := make([][]shared2.Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
@@ -169,7 +146,7 @@ func (pf *PathFinder[T]) GetNumberOfStepsUntilOutOfBounds(startItem T, startDire
 	return 0, fmt.Errorf("no path found")
 }
 
-func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem T, startDirection DirectionExternal) (int, error) {
+func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem T, startDirection shared2.DirectionExternal) (int, error) {
 	startPos, err := pf.getStartingPosition(startItem)
 
 	if err != nil {
@@ -178,7 +155,7 @@ func (pf *PathFinder[T]) GetNumberOfUniqueNodesVisitedUntilOutOfBounds(startItem
 	visitedNodeCount := 0
 
 	path := make([]matrix.Position, 0, 300)
-	directions := make([][]shared.Direction, 0, 300)
+	directions := make([][]shared2.Direction, 0, 300)
 	err = pf.followPath(
 		&FollowPathContext{
 			Position:                   startPos,
@@ -213,11 +190,11 @@ func (pf *PathFinder[T]) SetMatrix(matrix [][]T) {
 }
 
 // DoesMatrixLoop checks if the matrix contains a loop with the ruleset.
-func (pf *PathFinder[T]) DoesMatrixLoop(startItem T, startDirection shared.Direction) (bool, error) {
+func (pf *PathFinder[T]) DoesMatrixLoop(startItem T, startDirection shared2.Direction) (bool, error) {
 	return pf.doesMatrixLoop(startItem, startDirection)
 }
 
-func (pf *PathFinder[T]) DoesOtherMatrixLoop(otherMatrix [][]T, startItem T, startDirection DirectionExternal) (bool, error) {
+func (pf *PathFinder[T]) DoesOtherMatrixLoop(otherMatrix [][]T, startItem T, startDirection shared2.DirectionExternal) (bool, error) {
 	currentMatrix := pf.matrixHelper.GetRows()
 	pf.SetMatrix(otherMatrix)
 	looping, err := pf.DoesMatrixLoop(startItem, startDirection.ToDirection())
@@ -226,7 +203,7 @@ func (pf *PathFinder[T]) DoesOtherMatrixLoop(otherMatrix [][]T, startItem T, sta
 	return looping, err
 }
 
-func (pf *PathFinder[T]) GetNumberOfLoopingMatrices(otherMatrices [][][]T, startItem T, startDirection DirectionExternal) (int, error) {
+func (pf *PathFinder[T]) GetNumberOfLoopingMatrices(otherMatrices [][][]T, startItem T, startDirection shared2.DirectionExternal) (int, error) {
 	loopingMatrixCount := 0
 	for _, otherMatrix := range otherMatrices {
 		looping, err := pf.DoesOtherMatrixLoop(otherMatrix, startItem, startDirection)
@@ -241,7 +218,7 @@ func (pf *PathFinder[T]) GetNumberOfLoopingMatrices(otherMatrices [][][]T, start
 	return loopingMatrixCount, nil
 }
 
-func (pf *PathFinder[T]) GetNumberOfLoopingMatricesForGeneratedVariations(startItem T, startDirection DirectionExternal, replaceX, replaceWith T) (int, error) {
+func (pf *PathFinder[T]) GetNumberOfLoopingMatricesForGeneratedVariations(startItem T, startDirection shared2.DirectionExternal, replaceX, replaceWith T) (int, error) {
 	loopingMatrixCount := 0
 
 	for r, row := range pf.matrixHelper.GetRows() {
@@ -266,7 +243,7 @@ func (pf *PathFinder[T]) GetNumberOfLoopingMatricesForGeneratedVariations(startI
 	return loopingMatrixCount, nil
 }
 
-func (pf *PathFinder[T]) GetPositionInDirection(position matrix.Position, direction shared.Direction, n int) matrix.Position {
+func (pf *PathFinder[T]) GetPositionInDirection(position matrix.Position, direction shared2.Direction, n int) matrix.Position {
 	newPos := position
 	newPos.RowIndex += direction.DeltaR * n
 	newPos.ColIndex += direction.DeltaC * n
@@ -286,7 +263,7 @@ func (pf *PathFinder[T]) GetItemAtPosition(pos matrix.Position) T {
 	return pf.matrixHelper.GetAtPosition(pos.RowIndex, pos.ColIndex)
 }
 
-func (pf *PathFinder[T]) GetTilesInDirection(pos matrix.Position, direction shared.Direction) []T {
+func (pf *PathFinder[T]) GetTilesInDirection(pos matrix.Position, direction shared2.Direction) []T {
 	output := make([]T, 0)
 
 	posToCheck := pf.GetPositionInDirection(pos, direction, 1)
